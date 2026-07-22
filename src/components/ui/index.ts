@@ -14,8 +14,8 @@ export type { ModalProps } from './Modal';
 export { Dropdown, DropdownItem, DropdownTrigger } from './Dropdown';
 export type { DropdownProps, DropdownItemProps, DropdownTriggerProps } from './Dropdown';
 
-export { ToastProvider, useToast } from './Toast';
-export type { ToastData as Toast, ToastType } from './Toast';
+export { ToastProvider, useToast, Toast } from './Toast';
+export type { ToastData, ToastType } from './Toast';
 
 export { InstallButton } from './InstallButton';
 
