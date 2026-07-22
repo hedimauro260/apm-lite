@@ -118,3 +118,47 @@ export function useToast() {
     }
     return context;
 }
+
+// Adiciona no final do src/components/ui/Toast.tsx
+
+export interface ToastProps {
+    title: string;
+    message?: string;
+    type?: ToastType;
+    onClose?: () => void;
+    className?: string;
+}
+
+export function Toast({ title, message, type = 'info', onClose, className }: ToastProps) {
+    const style = TOAST_STYLES[type];
+    return (
+        <div
+            role="alert"
+            className={cn(
+                'flex items-start gap-3 p-4 rounded-lg border shadow-dropdown backdrop-blur-sm',
+                style.bg,
+                style.border,
+                className
+            )}
+        >
+            <div className={cn('shrink-0 mt-0.5', style.text)}>{style.icon}</div>
+            <div className="flex-1 min-w-0">
+                <p className={cn('text-sm font-semibold', style.text)}>{title}</p>
+                {message && (
+                    <p className="text-sm text-text-secondary mt-1 leading-relaxed">
+                        {message}
+                    </p>
+                )}
+            </div>
+            {onClose && (
+                <button
+                    onClick={onClose}
+                    className="shrink-0 p-1 rounded-md hover:bg-black/5 dark:hover:bg-white/10 text-text-muted hover:text-text-primary transition-colors"
+                    aria-label="Fechar notificação"
+                >
+                    <X className="h-4 w-4" />
+                </button>
+            )}
+        </div>
+    );
+}
