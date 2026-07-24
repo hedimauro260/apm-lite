@@ -1,22 +1,19 @@
+// src/components/ui/WalletSummaryCard.tsx
 import { type ReactNode } from "react";
 import { cn, formatCurrency, formatPercentage } from "../../lib/utils";
 import { ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
-import { SparkLine } from "./SparkLine";
 
-export interface SummaryCardProps {
-  title: string;
+export interface WalletSummaryCardProps {
+  title: string | ReactNode;
   value: number;
   variation?: number;
   icon: ReactNode;
   trend?: "up" | "down" | "neutral";
   className?: string;
   isCurrency?: boolean;
-  sparklineData?: number[];
-  sparklineColor?: string;
-  showSparkline?: boolean; // ⚡ NOVA PROP
 }
 
-export function SummaryCard({
+export function WalletSummaryCard({
   title,
   value,
   variation,
@@ -24,10 +21,7 @@ export function SummaryCard({
   trend = "neutral",
   className,
   isCurrency = true,
-  sparklineData,
-  sparklineColor = "text-primary",
-  showSparkline = true, //  DEFAULT: true (mantém comportamento atual)
-}: SummaryCardProps) {
+}: WalletSummaryCardProps) {
   const trendColor =
     trend === "up"
       ? "text-success"
@@ -74,7 +68,7 @@ export function SummaryCard({
         {displayVariation && (
           <div
             className={cn(
-              "flex items-center gap-1 text-xs font-medium mb-4",
+              "flex items-center gap-1 text-xs font-medium mb-0",
               trendColor,
             )}
           >
@@ -84,13 +78,6 @@ export function SummaryCard({
           </div>
         )}
       </div>
-
-      {/* ⚡ Sparkline condicional */}
-      {showSparkline && sparklineData && (
-        <div className="h-10 mt-auto pt-2 border-t border-border/50">
-          <SparkLine data={sparklineData} color={sparklineColor} height={40} />
-        </div>
-      )}
     </div>
   );
 }

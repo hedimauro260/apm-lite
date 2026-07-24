@@ -5,6 +5,18 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/).
 
+## [0.10.1] - 2026-07-24
+
+### Added
+
+- Novos assets e seus logos
+
+### Fixed
+
+- Dashboard: correção no tamanho dos elementos
+- Wallets: correção na cor escolhida para a carteira
+- Outras pequenas correções
+
 ## [0.10.0] - 2026-07-22
 
 ### 🎉 Lançamento Completo
@@ -25,7 +37,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/).
 - **Theme**: Dark/Light mode com persistência localStorage
 - **Toast System**: 4 variantes (success, error, warning, info) com animações
 
-### Architecture
+### Arquitetura
 
 - **GoalService**: Lógica isolada com snapshots imutáveis
 - **Custom Hooks**: useWallets, useAssets, useTransactions, useGoals, usePortfolio, useTransactionStreak, useTransactionDates

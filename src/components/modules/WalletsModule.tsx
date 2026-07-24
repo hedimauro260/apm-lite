@@ -1,8 +1,8 @@
+// src/components/modules/WalletsModule.tsx
 import { useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { type Wallet } from '../../types';
 import { cn, formatCurrency, calculatePercentage } from '../../lib/utils';
-//import { Section } from '../ui/Section';
 import { Button } from '../ui/Button';
 import { Plus, ChevronRight, ArrowUpRight, ArrowDownRight, RefreshCw, Settings, WalletMinimal } from 'lucide-react';
 
@@ -10,9 +10,24 @@ export interface WalletsModuleProps {
     wallets: Wallet[];
     totalPortfolioBalance: number;
     onAddWallet?: () => void;
-    // ⚡ NOVA PROP: Ação rápida que abre o modal com parâmetros pré-definidos
     onQuickAction?: (type: 'deposit' | 'withdraw' | 'transfer' | 'adjust', walletId: string) => void;
 }
+
+// ✅ Paleta de cores por tipo (fallback)
+const typeColors: Record<string, string> = {
+    main: '#7C5CFC',
+    savings: '#22C55E',
+    trading: '#F59E0B',
+    cold: '#3B82F6',
+    exchange: '#F97316',
+    hot: '#EC4899',
+    micro: '#8B5CF6',
+    bank: '#14B8A6',
+    cash: '#10B981',
+    other: '#6B7280',
+};
+
+const DEFAULT_COLOR = '#7C5CFC';
 
 export function WalletsModule({ wallets, totalPortfolioBalance, onAddWallet, onQuickAction }: WalletsModuleProps) {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -37,24 +52,28 @@ export function WalletsModule({ wallets, totalPortfolioBalance, onAddWallet, onQ
         }
     };
 
-    const getWalletColor = (type: string) => {
-        switch (type) {
-            case 'main': return 'bg-blue-500';
-            case 'savings': return 'bg-purple-500';
-            case 'trading': return 'bg-amber-500';
-            case 'cold': return 'bg-teal-500';
-            default: return 'bg-gray-500';
-        }
+    // ✅ Função para obter a cor da wallet
+    const getWalletColor = (wallet: Wallet) => {
+        return wallet.color || typeColors[wallet.type] || DEFAULT_COLOR;
     };
 
-    const getWalletIconBg = (type: string) => {
-        switch (type) {
-            case 'main': return 'bg-blue-500/10 text-blue-500';
-            case 'savings': return 'bg-purple-500/10 text-purple-500';
-            case 'trading': return 'bg-amber-500/10 text-amber-500';
-            case 'cold': return 'bg-teal-500/10 text-teal-500';
-            default: return 'bg-gray-500/10 text-gray-500';
-        }
+    // ✅ Estilo do ícone com a cor da wallet
+    const getIconStyle = (wallet: Wallet) => {
+        const color = getWalletColor(wallet);
+        return {
+            backgroundColor: `${color}15`,
+            color: color,
+        };
+    };
+
+    // ✅ Estilo da barra de progresso
+    const getProgressStyle = (wallet: Wallet) => {
+        const percentage = calculatePercentage(wallet.balance, totalPortfolioBalance);
+        const color = getWalletColor(wallet);
+        return {
+            backgroundColor: color,
+            width: `${Math.min(percentage, 100)}%`,
+        };
     };
 
     return (
@@ -70,7 +89,6 @@ export function WalletsModule({ wallets, totalPortfolioBalance, onAddWallet, onQ
 
             {/* Content - Scroll Horizontal */}
             <div className="flex-1 flex items-center relative overflow-hidden">
-                {/* Seta Esquerda */}
                 {showLeftArrow && (
                     <button
                         onClick={() => scroll('left')}
@@ -83,11 +101,14 @@ export function WalletsModule({ wallets, totalPortfolioBalance, onAddWallet, onQ
                 <div
                     ref={scrollContainerRef}
                     onScroll={handleScroll}
-                    className="flex gap-4 overflow-x-auto custom-scrollbar px-6 "
+                    className="flex gap-4 overflow-x-auto custom-scrollbar px-6"
                     style={{ scrollSnapType: 'x mandatory' }}
                 >
                     {wallets.map((wallet) => {
                         const percentage = calculatePercentage(wallet.balance, totalPortfolioBalance);
+                        const iconStyle = getIconStyle(wallet);
+                        const progressStyle = getProgressStyle(wallet);
+
                         return (
                             <div
                                 key={wallet.id}
@@ -98,11 +119,15 @@ export function WalletsModule({ wallets, totalPortfolioBalance, onAddWallet, onQ
                                     {/* Wallet Header */}
                                     <div className="flex items-center justify-between mb-3">
                                         <div className="flex items-center gap-2">
-                                            <div className={cn('p-2 rounded-sm', getWalletIconBg(wallet.type))}>
+                                            <div
+                                                className="p-2 rounded-sm transition-colors"
+                                                style={iconStyle}
+                                            >
                                                 <WalletMinimal className="h-4 w-4" />
                                             </div>
-                                            {/* Wallet Name */}
-                                            <h3 className="font-semibold text-text-primary text-xs mb-1">{wallet.name}</h3>
+                                            <h3 className="font-semibold text-text-primary text-xs mb-1">
+                                                {wallet.name}
+                                            </h3>
                                         </div>
                                         <span className={cn(
                                             'px-2 py-0.5 rounded text-xs font-medium',
@@ -111,6 +136,7 @@ export function WalletsModule({ wallets, totalPortfolioBalance, onAddWallet, onQ
                                             {wallet.status}
                                         </span>
                                     </div>
+
                                     {/* Balance */}
                                     <p className="text-xl font-bold text-text-primary mb-1">
                                         {formatCurrency(wallet.balance)}
@@ -119,7 +145,7 @@ export function WalletsModule({ wallets, totalPortfolioBalance, onAddWallet, onQ
                                         {percentage.toFixed(2)}% of portfolio
                                     </p>
 
-                                    {/* ⚡ Action Buttons - Agora funcionais */}
+                                    {/* Action Buttons */}
                                     <div className="flex gap-1 mb-4">
                                         <button
                                             onClick={() => onQuickAction?.('deposit', wallet.id)}
@@ -151,12 +177,12 @@ export function WalletsModule({ wallets, totalPortfolioBalance, onAddWallet, onQ
                                         </button>
                                     </div>
 
-                                    {/* Progress Bar */}
+                                    {/* ✅ Progress Bar com cor personalizada */}
                                     <div className="mt-auto">
                                         <div className="h-1.5 w-full bg-surface rounded-full overflow-hidden">
                                             <div
-                                                className={cn('h-full rounded-full transition-all', getWalletColor(wallet.type))}
-                                                style={{ width: `${percentage}%` }}
+                                                className="h-full rounded-full transition-all duration-500"
+                                                style={progressStyle}
                                             />
                                         </div>
                                         <p className="text-xs text-text-muted mt-1.5 text-right">

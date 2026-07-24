@@ -1,67 +1,75 @@
 // Componentes Básicos
-export { Button } from './Button';
-export type { ButtonProps, ButtonVariant, ButtonSize } from './Button';
+export { Button } from "./Button";
+export type { ButtonProps, ButtonVariant, ButtonSize } from "./Button";
 
-export { Input } from './Input';
-export type { InputProps } from './Input';
+export { Input } from "./Input";
+export type { InputProps } from "./Input";
 
-export { Badge } from './Badge';
-export type { BadgeProps, BadgeVariant } from './Badge';
+export { Badge } from "./Badge";
+export type { BadgeProps, BadgeVariant } from "./Badge";
 
-export { Modal } from './Modal';
-export type { ModalProps } from './Modal';
+export { Modal } from "./Modal";
+export type { ModalProps } from "./Modal";
 
-export { Dropdown, DropdownItem, DropdownTrigger } from './Dropdown';
-export type { DropdownProps, DropdownItemProps, DropdownTriggerProps } from './Dropdown';
+export { Dropdown, DropdownItem, DropdownTrigger } from "./Dropdown";
+export type {
+  DropdownProps,
+  DropdownItemProps,
+  DropdownTriggerProps,
+} from "./Dropdown";
 
-export { ToastProvider, useToast, Toast } from './Toast';
-export type { ToastData, ToastType } from './Toast';
+export { ToastProvider, useToast, Toast } from "./Toast";
+export type { ToastData, ToastType } from "./Toast";
 
-export { InstallButton } from './InstallButton';
+export { InstallButton } from "./InstallButton";
 
 // Componentes de Layout
-export { Section } from './Section';
-export type { SectionProps } from './Section';
+export { Section } from "./Section";
+export type { SectionProps } from "./Section";
 
-export { PageHeader } from './PageHeader';
-export type { PageHeaderProps } from './PageHeader';
+export { PageHeader } from "./PageHeader";
+export type { PageHeaderProps } from "./PageHeader";
 
-export { EmptyState } from './EmptyState';
-export type { EmptyStateProps } from './EmptyState';
+export { EmptyState } from "./EmptyState";
+export type { EmptyStateProps } from "./EmptyState";
 
 // Componentes de Dados (NOVOS)
-export { SummaryCard } from './SummaryCard';
-export type { SummaryCardProps } from './SummaryCard';
+export { SummaryCard } from "./SummaryCard";
+export type { SummaryCardProps } from "./SummaryCard";
 
-export { ProgressBar } from './ProgressBar';
-export type { ProgressBarProps } from './ProgressBar';
+// ✅ Novo componente sem Sparkline
+export { WalletSummaryCard } from "./WalletSummaryCard";
+export type { WalletSummaryCardProps } from "./WalletSummaryCard";
 
-export { StatusBadge } from './StatusBadge';
-export type { StatusBadgeProps, StatusType } from './StatusBadge';
+export { ProgressBar } from "./ProgressBar";
+export type { ProgressBarProps } from "./ProgressBar";
 
-export { DataTable } from './DataTable';
-export type { DataTableProps, Column } from './DataTable';
+export { StatusBadge } from "./StatusBadge";
+export type { StatusBadgeProps, StatusType } from "./StatusBadge";
+
+export { DataTable } from "./DataTable";
+export type { DataTableProps, Column } from "./DataTable";
 
 // Componentes Específicos
-export { ActionGroup } from './ActionGroup';
-export type { ActionGroupProps, ActionItem } from './ActionGroup';
+export { ActionGroup } from "./ActionGroup";
+export type { ActionGroupProps, ActionItem } from "./ActionGroup";
 
-export { WalletCard } from './WalletCard';
-export type { WalletCardProps } from './WalletCard';
+export { WalletCard } from "./WalletCard";
+export type { WalletCardProps } from "./WalletCard";
 
-export { AssetCard } from './AssetCard';
-export type { AssetCardProps } from './AssetCard';
+export { AssetCard } from "./AssetCard";
+export type { AssetCardProps } from "./AssetCard";
 
-export { FilterBar } from './FilterBar';
-export type { FilterBarProps, FilterOption } from './FilterBar';
+export { FilterBar } from "./FilterBar";
+export type { FilterBarProps, FilterOption } from "./FilterBar";
 
-export { CalendarPopover } from './CalendarPopover';
-export type { CalendarPopoverProps } from './CalendarPopover';
+export { CalendarPopover } from "./CalendarPopover";
+export type { CalendarPopoverProps } from "./CalendarPopover";
 
-export { NavItem } from './NavItem';
-export type { NavItemProps } from './NavItem';
+export { NavItem } from "./NavItem";
+export type { NavItemProps } from "./NavItem";
 
-export { SparkLine } from './SparkLine';
-export type { SparkLineProps } from './SparkLine';
+export { SparkLine } from "./SparkLine";
+export type { SparkLineProps } from "./SparkLine";
 
-export { aggregateAssetsBySymbol, type AggregatedAsset } from '../../lib/utils';
+export { aggregateAssetsBySymbol, type AggregatedAsset } from "../../lib/utils";

@@ -9,11 +9,11 @@ export interface ProgressBarProps {
     labelClassName?: string;
 }
 
-const colorClasses = {
+const colorMap: Record<string, string> = {
     primary: 'bg-primary',
     success: 'bg-success',
-    warning: 'bg-warning',
     danger: 'bg-danger',
+    warning: 'bg-warning',
     info: 'bg-info',
 };
 
@@ -27,24 +27,31 @@ export function ProgressBar({
 }: ProgressBarProps) {
     const percentage = Math.min(Math.max(calculatePercentage(value, max), 0), 100);
 
+    // ✅ Se for uma cor personalizada (começa com #), usa inline style
+    const isCustomColor = color.startsWith('#');
+    const bgColor = isCustomColor ? '' : colorMap[color] || 'bg-primary';
+
     return (
-        <div className={cn('w-full space-y-2', className)}>
-            {showLabel && (
-                <div className="flex justify-between items-center">
-                    <span className={cn('text-xs font-medium text-text-secondary', labelClassName)}>
-                        Progress
-                    </span>
-                    <span className="text-xs font-semibold text-text-primary">
-                        {percentage.toFixed(1)}%
-                    </span>
-                </div>
-            )}
-            <div className="h-2 w-full bg-surface-elevated rounded-full overflow-hidden">
+        <div className={cn('w-full', className)}>
+            <div className="w-full bg-surface-elevated rounded-full h-2 overflow-hidden">
                 <div
-                    className={cn('h-full rounded-full transition-all duration-300 ease-out', colorClasses[color])}
-                    style={{ width: `${percentage}%` }}
+                    className={cn(
+                        'h-full rounded-full transition-all duration-500',
+                        !isCustomColor && bgColor
+                    )}
+                    style={
+                        isCustomColor
+                            ? { backgroundColor: color, width: `${percentage}%` }
+                            : { width: `${percentage}%` }
+                    }
                 />
             </div>
+            {showLabel && (
+                <div className={cn('flex justify-between text-xs text-text-muted mt-1', labelClassName)}>
+                    <span>{value.toFixed(2)}</span>
+                    <span>{percentage.toFixed(1)}%</span>
+                </div>
+            )}
         </div>
     );
 }
