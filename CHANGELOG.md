@@ -15,6 +15,7 @@ e este projeto adere ao [Semantic Versioning](https://semver.org/).
 
 - Dashboard: correção no tamanho dos elementos
 - Wallets: correção na cor escolhida para a carteira
+- Correção com as configurações do PWA
 - Outras pequenas correções
 
 ## [0.10.0] - 2026-07-22

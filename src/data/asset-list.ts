@@ -14,7 +14,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "BTC",
     name: "Bitcoin",
     type: "crypto",
-    logo: "/src/assets/logos/btc.webp",
+    logo: "/logos/btc.webp",
     defaultColor: "#F7931A",
   },
   {
@@ -22,7 +22,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "ETH",
     name: "Ethereum",
     type: "crypto",
-    logo: "/src/assets/logos/ethereum.webp",
+    logo: "/logos/ethereum.webp",
     defaultColor: "#627EEA",
   },
   {
@@ -30,7 +30,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "SOL",
     name: "Solana",
     type: "crypto",
-    logo: "/src/assets/logos/solana.webp",
+    logo: "/logos/solana.webp",
     defaultColor: "#9945FF",
   },
   {
@@ -38,7 +38,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "BNB",
     name: "BNB",
     type: "crypto",
-    logo: "/src/assets/logos/binance.webp",
+    logo: "/logos/binance.webp",
     defaultColor: "#F3BA2F",
   },
   {
@@ -46,7 +46,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "ADA",
     name: "Cardano",
     type: "crypto",
-    logo: "/src/assets/logos/cardano.webp",
+    logo: "/logos/cardano.webp",
     defaultColor: "#0033AD",
   },
   {
@@ -54,7 +54,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "XRP",
     name: "XRP",
     type: "crypto",
-    logo: "/src/assets/logos/ripple.webp",
+    logo: "/logos/ripple.webp",
     defaultColor: "#23292F",
   },
   {
@@ -62,7 +62,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "DOGE",
     name: "Dogecoin",
     type: "crypto",
-    logo: "/src/assets/logos/doge.webp",
+    logo: "/logos/doge.webp",
     defaultColor: "#C2A633",
   },
   {
@@ -70,7 +70,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "DOT",
     name: "Polkadot",
     type: "crypto",
-    logo: "/src/assets/logos/polkadot.webp",
+    logo: "/logos/polkadot.webp",
     defaultColor: "#E6007A",
   },
   {
@@ -78,7 +78,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "AVAX",
     name: "Avalanche",
     type: "crypto",
-    logo: "/src/assets/logos/avalanche.webp",
+    logo: "/logos/avalanche.webp",
     defaultColor: "#E84142",
   },
   {
@@ -86,7 +86,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "MATIC",
     name: "Polygon",
     type: "crypto",
-    logo: "/src/assets/logos/polygon.webp",
+    logo: "/logos/polygon.webp",
     defaultColor: "#8247E5",
   },
   {
@@ -94,7 +94,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "LINK",
     name: "Chainlink",
     type: "crypto",
-    logo: "/src/assets/logos/link.webp",
+    logo: "/logos/link.webp",
     defaultColor: "#2A5ADA",
   },
   {
@@ -102,7 +102,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "LTC",
     name: "Litecoin",
     type: "crypto",
-    logo: "/src/assets/logos/ltc.webp",
+    logo: "/logos/ltc.webp",
     defaultColor: "#345D9D",
   },
   {
@@ -110,7 +110,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "DASH",
     name: "Dash",
     type: "crypto",
-    logo: "/src/assets/logos/dash.webp",
+    logo: "/logos/dash.webp",
     defaultColor: "#8E44AD",
   },
 
@@ -120,7 +120,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "USDT",
     name: "Tether",
     type: "crypto",
-    logo: "/src/assets/logos/tether.webp",
+    logo: "/logos/tether.webp",
     defaultColor: "#26A17B",
   },
   {
@@ -128,7 +128,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "USDC",
     name: "USD Coin",
     type: "crypto",
-    logo: "/src/assets/logos/usdc.webp",
+    logo: "/logos/usdc.webp",
     defaultColor: "#2775CA",
   },
   {
@@ -136,7 +136,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "DAI",
     name: "Dai",
     type: "crypto",
-    logo: "/src/assets/logos/dai.webp",
+    logo: "/logos/dai.webp",
     defaultColor: "#F4B731",
   },
 
@@ -146,7 +146,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "USD",
     name: "US Dollar",
     type: "fiat",
-    logo: "/src/assets/logos/usd.webp",
+    logo: "/logos/usd.webp",
     defaultColor: "#22C55E",
   },
   {
@@ -154,7 +154,7 @@ export const PRESET_ASSETS: PresetAsset[] = [
     symbol: "EUR",
     name: "Euro",
     type: "fiat",
-    logo: "/src/assets/logos/eur.webp",
+    logo: "/logos/eur.webp",
     defaultColor: "#3B82F6",
   },
 ];
