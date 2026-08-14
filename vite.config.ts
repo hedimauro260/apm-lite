@@ -1,8 +1,8 @@
-// vite.config.ts
 import { defineConfig } from "vite";
 import react from "@vitejs/plugin-react";
 import tailwindcss from "@tailwindcss/vite";
 import { VitePWA } from "vite-plugin-pwa";
+import { visualizer } from "rollup-plugin-visualizer";
 
 export default defineConfig({
   plugins: [
@@ -67,7 +67,7 @@ export default defineConfig({
               cacheName: "google-fonts-cache",
               expiration: {
                 maxEntries: 10,
-                maxAgeSeconds: 60 * 60 * 24 * 365, // 1 ano
+                maxAgeSeconds: 60 * 60 * 24 * 365,
               },
             },
           },
@@ -78,64 +78,65 @@ export default defineConfig({
               cacheName: "coingecko-api-cache",
               expiration: {
                 maxEntries: 50,
-                maxAgeSeconds: 60 * 60, // 1 hora
+                maxAgeSeconds: 60 * 60,
               },
             },
           },
         ],
       },
     }),
+    visualizer({
+      filename: "dist/stats.html",
+      open: true,
+      gzipSize: true,
+    }),
   ],
   build: {
     chunkSizeWarningLimit: 1000,
     rollupOptions: {
       output: {
-        // ✅ Code Splitting com groups (conforme solicitado)
-        codeSplitting: {
-          groups: [
-            // 1. Bibliotecas principais (alta prioridade para ficarem juntas)
-            {
-              name: "react-core",
-              test: /[\\/]node_modules[\\/](react|react-dom|scheduler)[\\/]/,
-              priority: 30,
-              minSize: 0,
-            },
-            // 2. Roteamento e estado (se usar)
-            {
-              name: "router-state",
-              test: /[\\/]node_modules[\\/](react-router-dom|@reduxjs|zustand|jotai)[\\/]/,
-              priority: 25,
-            },
-            // 3. UI Framework específico
-            {
-              name: "ui-framework",
-              test: /[\\/]node_modules[\\/](@mui|antd|@chakra-ui)[\\/]/,
-              priority: 20,
-              maxSize: 300000, // 300KB
-            },
-            // 4. Bibliotecas de utilidades
-            {
-              name: "utils",
-              test: /[\\/]node_modules[\\/](axios|lodash|date-fns|dayjs|@tanstack)[\\/]/,
-              priority: 15,
-            },
-            // 5. Todo o resto das dependências (com divisão por tamanho)
-            {
-              name: "vendor",
-              test: /[\\/]node_modules[\\/]/,
-              priority: 10,
-              maxSize: 250000, // 250KB - força divisão
-              minSize: 10000,
-            },
-            // 6. Código compartilhado da aplicação
-            {
-              name: "common",
-              minShareCount: 2,
-              minSize: 10000,
-              priority: 5,
-            },
-          ],
+        // ✅ VERSÃO SIMPLIFICADA - SEM GROUPS PROBLEMÁTICOS
+        manualChunks(id) {
+          // React core
+          if (
+            id.includes("node_modules/react/") ||
+            id.includes("node_modules/react-dom/") ||
+            id.includes("node_modules/scheduler/")
+          ) {
+            return "react-core";
+          }
+
+          // React Router
+          if (
+            id.includes("node_modules/react-router-dom/") ||
+            id.includes("node_modules/react-router/")
+          ) {
+            return "router";
+          }
+
+          // Recharts (provável culpado do createSelector)
+          if (
+            id.includes("node_modules/recharts/") ||
+            id.includes("node_modules/d3-") ||
+            id.includes("node_modules/reselect/")
+          ) {
+            return "charts";
+          }
+
+          // Dexie (database)
+          if (id.includes("node_modules/dexie/")) {
+            return "database";
+          }
+
+          // Outras dependências
+          if (id.includes("node_modules/")) {
+            return "vendor";
+          }
         },
+        // Configuração de chunks com tamanhos máximos
+        chunkFileNames: "assets/[name]-[hash].js",
+        entryFileNames: "assets/[name]-[hash].js",
+        assetFileNames: "assets/[name]-[hash].[ext]",
       },
     },
   },

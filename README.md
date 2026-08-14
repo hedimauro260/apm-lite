@@ -69,23 +69,28 @@ npm run preview # Preview do build local
 
 ## Estrutura do Projeto
 
+```bash
 src/
-├── components/
-│ ├── layout/ # AppLayout, Sidebar, Header, PageHeader, Footer
-│ ├── modals/ # Modais compartilhados (Wallet, Site, Backup/Restore, etc.)
-│ ├── modules/ # Componentes complexos (AllTransactions)
-│ └── ui/ # Componentes base (Button, Input, Modal, Toast, Calendar)
-├── contexts/ # ThemeContext, AppContext
-├── database/ # Dexie schema (v6) + instância
-├── lib/ # Utils (format, colors, backup, constantes)
-├── pages/
-│ ├── Dashboard/ # Dashboard + componentes dedicados
-│ ├── Wallets/ # WalletsPage + cards e context menu
-│ ├── Assets/ # AssetsPage + grid, tabela, modais e lógica
-│ ├── Websites/ # WebsitesPage + tabela, movimentações e lógica
-│ ├── Transactions/ # TransactionsPage
-│ └── Goals/ # GoalsPage + tabelas, modais e lógica
-└── types/ # TypeScript interfaces (wallet, asset, site, goal, etc.)
+├── components/          # APENAS componentes 100% compartilhados
+│   ├── layout/          # AppLayout, Sidebar, Header
+│   ├── modules/         # Componentes complexos reutilizáveis
+│   ├── modals/          # Modais globais
+│   └── ui/              # Componentes base (Button, Modal, Toast, etc.)
+├── contexts/            # ThemeContext, ToastProvider
+├── database/            # Dexie schema (v4) + seed + mocks de teste
+├── hooks/               # Custom hooks globais (usePortfolio, useWallets, etc.)
+├── lib/                 # Utils (formatCurrency, cn, backup.ts)
+├── pages/               # Arquitetura por feature (Feature-Sliced Design)
+│   ├── dashboard/       # Dashboard.tsx + components/ (exclusivos)
+│   ├── wallets/         # Wallets.tsx + components/ (exclusivos)
+│   ├── assets/          # Assets.tsx + components/ (exclusivos)
+│   ├── transactions/    # Transactions.tsx + components/ (exclusivos)
+│   ├── goals/           # Goals.tsx + components/ (exclusivos)
+│   └── website/         # Website.tsx + components/ (exclusivos)
+├── services/            # GoalService (lógica de negócio isolada da UI)
+├── test/                # Setup do Vitest e mocks do Dexie
+└── types/               # Interfaces e tipos TypeScript globais
+```
 
 ### Lógica por página
 
