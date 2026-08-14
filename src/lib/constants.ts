@@ -2,6 +2,9 @@
  * Application Constants
  */
 
+// App version (used in the UI and in backup files)
+export const APP_VERSION = "0.13.0";
+
 // Wallet types
 export const WALLET_TYPES = {
   MAIN: "main",
@@ -89,6 +92,7 @@ export const ANIMATION_DURATION = {
 
 // Breakpoints (px)
 export const BREAKPOINTS = {
+  XS: 375,
   SM: 640,
   MD: 768,
   LG: 1024,

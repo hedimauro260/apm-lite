@@ -1,66 +1,62 @@
-/**
- * APMDatabase - Schema do Dexie (IndexedDB)
- * 
- * VERSIONAMENTO:
- * - v1: wallets, assets, transactions, goals
- * - v2: assetMovements (histórico de add/remove de assets)
- * - v3: goalSnapshots (fotos imutáveis de goals arquivados)
- * 
- * ÍNDICES:
- * Cada tabela tem índices nos campos mais consultados
- * para evitar scans completos (ex: 'walletId', 'status', 'date')
- * 
- * @example
- * await db.wallets.where('status').equals('active').toArray();
- */
-
 import Dexie, { type Table } from "dexie";
-import type { Wallet, Asset, Transaction, Goal, AssetMovement, GoalSnapshot } from "../types";
+import type { Wallet, Transaction, AssetEntity, AssetPosition, AssetMovement, Goal, Site, SiteMovement } from "../types";
 
-// Estendendo a interface Global Window para tipagem segura do console de debug
+// ✅ Corrigir: Window (maiúsculo) em vez de window (minúsculo)
 declare global {
-    interface Window {
-        db?: APMDatabase;
-    }
+  interface Window {
+    db?: APMDatabase;
+  }
 }
 
+// Configuração do banco de dados
 class APMDatabase extends Dexie {
-    // Tabelas
-    wallets!: Table<Wallet, string>;
-    assets!: Table<Asset, string>;
-    transactions!: Table<Transaction, string>;
-    goals!: Table<Goal, string>;
-    assetMovements!: Table<AssetMovement, string>; // ⚡ NOVA TABELA
-    goalSnapshots!: Table<GoalSnapshot, string>; // ⚡ NOVA TABELA
+  // Tabelas
+  wallets!: Table<Wallet>;
+  transactions!: Table<Transaction, string>;
+  assets!: Table<AssetEntity, string>;
+  assetPositions!: Table<AssetPosition, string>;
+  assetMovements!: Table<AssetMovement, string>;
+  goals!: Table<Goal, string>;
+  sites!: Table<Site, string>;
+  siteMovements!: Table<SiteMovement, string>;
 
-    constructor() {
-        super("APMLiteDB");
+  constructor() {
+    super("APMLite_DB");
 
-        // Definição do Schema (Version 1)
-        // Os campos após a vírgula são índices para buscas rápidas
-        this.version(1).stores({
-            wallets: "id, name, type, status, createdAt",
-            assets: "id, walletId, type, symbol, createdAt",
-            transactions: "id, walletId, type, status, date",
-            goals: "id, status, deadline, createdAt",
-        });
-
-        // ⚡ Versão 2: Adiciona a nova tabela de movimentações de assets
-        this.version(2).stores({
-            assetMovements: 'id, assetId, assetSymbol, walletId, actionType, date',
-        });
-
-        //  Versão 3: Adiciona a tabela de snapshots de objetivos
-        this.version(3).stores({
-            goalSnapshots: 'id, goalId, archivedAt, percentage',
-        });
-    }
+    // Schema unificado em uma única versão
+    // Os campos após a vírgula são índices para buscas rápidas
+    this.version(6)
+      .stores({
+        wallets: "&id, name, type, status, createdAt",
+        transactions: "&id, walletId, relatedWalletId, date, type, status, createdAt",
+        assets: "&id, symbol, type, name, createdAt",
+        assetPositions: "&id, assetId, walletId, createdAt",
+        assetMovements: "&id, assetId, walletId, actionType, date, createdAt",
+        goals: "&id, status, startDate, endDate, createdAt",
+        sites: "&id, name, status, createdAt",
+        siteMovements: "&id, siteId, type, date, createdAt",
+      })
+      .upgrade(async () => {
+        // Em desenvolvimento: zera todas as tabelas ao migrar de versões antigas
+        await Promise.all([
+          this.table("wallets").clear(),
+          this.table("transactions").clear(),
+          this.table("assets").clear(),
+          this.table("assetPositions").clear(),
+          this.table("assetMovements").clear(),
+          this.table("goals").clear(),
+          this.table("sites").clear(),
+          this.table("siteMovements").clear(),
+        ]);
+      });
+  }
 }
 
+// ✅ Exportar a instância diretamente
 export const db = new APMDatabase();
 
 // Helper para debug em ambiente de desenvolvimento (DEV)
 if (import.meta.env.DEV) {
-    window.db = db;
-    console.log("💾 Database instance available safely at window.db");
+  window.db = db; // ✅ Agora funciona
+  console.log("💾 Database instance available safely at window.db");
 }

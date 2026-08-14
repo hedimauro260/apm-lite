@@ -1,56 +1,76 @@
-import { Modal } from '../ui/Modal';
-import { Button } from '../ui/Button';
-import { type Wallet } from '../../types';
-import { formatCurrency } from '../../lib/utils';
-import { AlertTriangle } from 'lucide-react';
+import { Wallet as WalletIcon } from "lucide-react";
+import { Modal } from "../ui/Modal";
+import { Button } from "../ui/Button";
+import { formatCurrency } from "../../lib/utils";
+import type { Wallet } from "../../types";
 
 export interface DeleteWalletModalProps {
-    isOpen: boolean;
+    open: boolean;
+    wallet?: Wallet;
     onClose: () => void;
-    wallet: Wallet | null;
-    onConfirm: (walletId: string) => void;
+    onConfirm: (wallet: Wallet) => void;
 }
 
-export function DeleteWalletModal({ isOpen, onClose, wallet, onConfirm }: DeleteWalletModalProps) {
-    if (!wallet) return null;
-
-    const handleConfirm = () => {
-        onConfirm(wallet.id);
-        onClose();
-    };
-
+export function DeleteWalletModal({
+    open,
+    wallet,
+    onClose,
+    onConfirm,
+}: DeleteWalletModalProps) {
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Delete Wallet" size="md">
-            <div className="space-y-6">
-                <div className="flex items-start gap-4 p-4 bg-danger/10 border border-danger/20 rounded-lg">
-                    <AlertTriangle className="h-6 w-6 text-danger shrink-0" />
-                    <div>
-                        <p className="text-sm font-medium text-text-primary">
-                            Are you sure you want to delete this wallet?
-                        </p>
-                        <p className="text-sm text-text-secondary mt-1">
-                            This action cannot be undone. All transactions associated with{' '}
-                            <strong>{wallet.name}</strong> will be permanently deleted.
-                        </p>
-                    </div>
-                </div>
-
-                <div className="p-4 bg-surface-elevated rounded-lg border border-border">
-                    <p className="text-sm text-text-muted">Wallet</p>
-                    <p className="text-lg font-semibold text-text-primary">{wallet.name}</p>
-                    <p className="text-sm text-text-muted mt-1">
-                        Balance: {formatCurrency(wallet.balance)}
-                    </p>
-                </div>
-
-                <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                    <Button type="button" variant="ghost" onClick={onClose}>
+        <Modal
+            isOpen={open}
+            onClose={onClose}
+            title="Delete Wallet"
+            variant="danger"
+            size="sm"
+            footer={
+                <>
+                    <Button variant="secondary" onClick={onClose}>
                         Cancel
                     </Button>
-                    <Button type="button" variant="danger" onClick={handleConfirm}>
+                    <Button variant="danger" onClick={() => wallet && onConfirm(wallet)}>
                         Delete Wallet
                     </Button>
-                </div>
+                </>
+            }
+        >
+            <div className="space-y-4">
+                <p className="text-sm text-text-secondary">
+                    Are you sure you want to delete this wallet?{" "}
+                    <span className="text-text-primary font-medium">
+                        This action cannot be undone.
+                    </span>{" "}
+                    All transactions associated with {wallet?.name ?? "this wallet"}{" "}
+                    will be permanently deleted.
+                </p>
+
+                {wallet && (
+                    <div className="flex items-center justify-between gap-4 rounded-lg bg-surface-elevated border border-border px-4 py-3">
+                        <div className="flex items-center gap-3 min-w-0">
+                            <div
+                                className="p-2 rounded-md shrink-0"
+                                style={{
+                                    backgroundColor: wallet.color
+                                        ? `${wallet.color}15`
+                                        : undefined,
+                                    color: wallet.color,
+                                }}
+                            >
+                                <WalletIcon className="h-4 w-4" />
+                            </div>
+                            <div className="min-w-0">
+                                <p className="text-sm font-semibold text-text-primary truncate">
+                                    {wallet.name}
+                                </p>
+                                <p className="text-xs text-text-muted">Wallet balance</p>
+                            </div>
+                        </div>
+                        <div className="text-sm font-bold text-text-primary shrink-0">
+                            {formatCurrency(wallet.balance)}
+                        </div>
+                    </div>
+                )}
             </div>
         </Modal>
     );

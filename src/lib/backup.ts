@@ -1,125 +1,101 @@
-/**
- * Backup & Restore - Export/Import atômico de dados
- * 
- * SEGURANÇA:
- * - exportData(): Gera JSON com TODAS as tabelas do Dexie
- * - importData(): Usa db.transaction('rw', ...) para atomicidade
- *   → Se qualquer etapa falhar, NENHUM dado é alterado (rollback)
- * 
- * FORMATO DO ARQUIVO:
- * {
- *   version: "1.0",
- *   exportDate: "2026-07-22T...",
- *   wallets: [...],
- *   assets: [...],
- *   transactions: [...],
- *   goals: [...],
- *   goalSnapshots: [...],
- *   assetMovements: [...]
- * }
- * 
- * @warning IMPORT SUBSTITUI TODOS OS DADOS ATUAIS
- */
+import { APP_VERSION, downloadFile } from "./utils";
+import { db } from "../database/db";
 
-import { db } from '../database/db';
+export const BACKUP_TABLES = [
+  "wallets",
+  "transactions",
+  "assets",
+  "assetPositions",
+  "assetMovements",
+  "goals",
+  "sites",
+  "siteMovements",
+] as const;
 
-export interface BackupData {
-    version: string;
-    exportDate: string;
-    wallets: any[];
-    assets: any[];
-    transactions: any[];
-    goals: any[];
-    goalSnapshots: any[];
-    assetMovements: any[];
+export type BackupTableName = (typeof BACKUP_TABLES)[number];
+
+export interface BackupPayload {
+  app: string;
+  appVersion: string;
+  exportedAt: string;
+  data: Record<BackupTableName, unknown[]>;
 }
 
-/**
- * Exporta todos os dados do banco para um arquivo JSON.
- */
-export async function exportData(): Promise<void> {
-    try {
-        const data: BackupData = {
-            version: '1.0',
-            exportDate: new Date().toISOString(),
-            wallets: await db.wallets.toArray(),
-            assets: await db.assets.toArray(),
-            transactions: await db.transactions.toArray(),
-            goals: await db.goals.toArray(),
-            goalSnapshots: await db.goalSnapshots.toArray(),
-            assetMovements: await db.assetMovements.toArray(),
-        };
+export function isBackupPayload(value: unknown): value is BackupPayload {
+  if (!value || typeof value !== "object") return false;
+  const record = value as Record<string, unknown>;
+  if (record.app !== "APM Lite") return false;
+  if (typeof record.appVersion !== "string") return false;
+  if (typeof record.exportedAt !== "string") return false;
+  if (!record.data || typeof record.data !== "object") return false;
 
-        const jsonString = JSON.stringify(data, null, 2);
-        const blob = new Blob([jsonString], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = `apm-lite-backup-${new Date().toISOString().split('T')[0]}.json`;
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-    } catch (error) {
-        console.error('Export failed:', error);
-        throw new Error('Failed to export data. Please try again.');
-    }
+  const data = record.data as Record<string, unknown>;
+  return BACKUP_TABLES.every((table) => Array.isArray(data[table]));
 }
 
-/**
- * Importa dados de um arquivo JSON, substituindo tudo de forma atômica.
- */
-export async function importData(file: File): Promise<void> {
-    return new Promise((resolve, reject) => {
-        const reader = new FileReader();
+export async function exportBackup(): Promise<BackupPayload> {
+  const [wallets, transactions, assets, assetPositions, assetMovements, goals, sites, siteMovements] =
+    await Promise.all([
+      db.wallets.toArray(),
+      db.transactions.toArray(),
+      db.assets.toArray(),
+      db.assetPositions.toArray(),
+      db.assetMovements.toArray(),
+      db.goals.toArray(),
+      db.sites.toArray(),
+      db.siteMovements.toArray(),
+    ]);
 
-        reader.onload = async (event) => {
-            try {
-                const text = event.target?.result as string;
-                const data: BackupData = JSON.parse(text);
+  return {
+    app: "APM Lite",
+    appVersion: APP_VERSION,
+    exportedAt: new Date().toISOString(),
+    data: {
+      wallets,
+      transactions,
+      assets,
+      assetPositions,
+      assetMovements,
+      goals,
+      sites,
+      siteMovements,
+    },
+  };
+}
 
-                // Validação básica da estrutura
-                if (!data.version || !Array.isArray(data.wallets)) {
-                    throw new Error('Invalid backup file format. Please select a valid APM Lite backup.');
-                }
+export function downloadBackup(payload: BackupPayload): void {
+  const date = new Date(payload.exportedAt);
+  const filename = `apm-lite-backup-${date.getFullYear()}-${String(
+    date.getMonth() + 1,
+  ).padStart(2, "0")}-${String(date.getDate()).padStart(2, "0")}.json`;
 
-                // Transação atômica: limpa e restaura. Se falhar em qualquer ponto, nada é alterado.
-                await db.transaction(
-                    'rw',
-                    [
-                        db.wallets,
-                        db.assets,
-                        db.transactions,
-                        db.goals,
-                        db.goalSnapshots,
-                        db.assetMovements,
-                    ],
-                    async () => {
-                        await db.wallets.clear();
-                        await db.assets.clear();
-                        await db.transactions.clear();
-                        await db.goals.clear();
-                        await db.goalSnapshots.clear();
-                        await db.assetMovements.clear();
+  downloadFile(JSON.stringify(payload, null, 2), filename, "application/json");
+}
 
-                        if (data.wallets.length) await db.wallets.bulkAdd(data.wallets);
-                        if (data.assets.length) await db.assets.bulkAdd(data.assets);
-                        if (data.transactions.length) await db.transactions.bulkAdd(data.transactions);
-                        if (data.goals.length) await db.goals.bulkAdd(data.goals);
-                        if (data.goalSnapshots.length) await db.goalSnapshots.bulkAdd(data.goalSnapshots);
-                        if (data.assetMovements.length) await db.assetMovements.bulkAdd(data.assetMovements);
-                    }
-                );
+export function parseBackup(text: string): BackupPayload {
+  let parsed: unknown;
+  try {
+    parsed = JSON.parse(text);
+  } catch {
+    throw new Error("The selected file is not a valid JSON file.");
+  }
 
-                resolve();
-            } catch (error) {
-                console.error('Import failed:', error);
-                reject(error instanceof Error ? error : new Error('Failed to import data. The file may be corrupted.'));
-            }
-        };
+  if (!isBackupPayload(parsed)) {
+    throw new Error("The selected file is not a valid APM Lite backup.");
+  }
 
-        reader.onerror = () => reject(new Error('Failed to read the file.'));
-        reader.readAsText(file);
-    });
+  return parsed;
+}
+
+export async function importBackup(payload: BackupPayload): Promise<void> {
+  await db.transaction("rw", db.tables, async () => {
+    await Promise.all(BACKUP_TABLES.map((table) => db.table(table).clear()));
+    await Promise.all(
+      BACKUP_TABLES.map((table) => {
+        const rows = payload.data[table];
+        if (rows.length === 0) return Promise.resolve();
+        return db.table(table).bulkPut(rows as never[]);
+      }),
+    );
+  });
 }

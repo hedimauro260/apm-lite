@@ -1,50 +1,55 @@
 # APM Lite - Asset Portfolio Manager
 
-**Versão:** 0.10.0  
+**Versão:** 0.13.0  
 **Status:** ✅ Todas as páginas funcionais
 
-APM Lite é um gerenciador de portfólio financeiro pessoal que permite rastrear carteiras, ativos, transações e metas semanais de depósito. Construído com React, TypeScript, Tailwind CSS v4 e Dexie (IndexedDB).
+APM Lite é um gerenciador de portfólio financeiro pessoal que permite rastrear carteiras, ativos, transações, websites/exchanges e metas semanais de depósito. Construído com React 19, TypeScript, Tailwind CSS v4 e Dexie (IndexedDB).
 
 ## 🚀 Funcionalidades
 
 ### Páginas Principais
 
-- **Dashboard**: Visão geral do portfólio com métricas, sparklines e atividade recente
-- **Wallets**: Gerenciamento de carteiras com cards visuais, menu de contexto e gráfico de barras
-- **Assets**: Rastreamento de ativos com tabela expansível, atualização de preços e histórico
+- **Dashboard**: Visão geral do portfólio com métricas, sparklines, preços de criptomoedas ao vivo e atividade recente
+- **Wallets**: Gerenciamento de carteiras com cards visuais, menu de contexto e resumo por carteira
+- **Assets**: Rastreamento de ativos com grid/tabela, atualização de preços, movimentações e histórico
+- **Websites**: Rastreamento de websites/exchanges monitorados com saldo, movimentações (earn/withdraw), gráfico de ganhos e estatísticas de volume
 - **Transactions**: Histórico completo com filtros, busca e paginação
 - **Goals**: Metas semanais com streak, best wallet e snapshots arquivados
 
 ### Features
 
 - 🌗 Modo escuro/claro com persistência
+- 📱 Responsividade completa (sidebar colapsável, menu mobile em drawer, modais full-screen, tabelas com scroll horizontal)
 - Sparklines animados em tempo real
 - Transaction Streak (gamificação)
-- 📅 CalendarPopover com highlights de transações
+- 📅 Calendar com highlights de transações
 - 💾 Backup & Restore via JSON (transação atômica)
-- 📱 PWA instalável (Service Worker)
+- 📲 PWA instalável (Service Worker com autoUpdate)
 - 🎯 6 níveis de progresso de metas
-- GoalService com snapshots imutáveis
+- Goal snapshots imutáveis
+- ⚡ Otimizações: React.memo, lazy loading de ícones, code splitting no build
 
 ## 🛠️ Stack Tecnológica
 
-| Categoria      | Tecnologia               |
-| -------------- | ------------------------ |
-| Frontend       | React 18 + TypeScript    |
-| Build          | Vite 5                   |
-| Estilização    | Tailwind CSS v4          |
-| Banco de Dados | Dexie.js (IndexedDB)     |
-| Gráficos       | Recharts                 |
-| Datas          | date-fns                 |
-| Ícones         | Lucide React             |
-| Testes         | Vitest + Testing Library |
-| PWA            | vite-plugin-pwa          |
+| Categoria      | Tecnologia                      |
+| -------------- | ------------------------------- |
+| Frontend       | React 19 + TypeScript           |
+| Build          | Vite 8                          |
+| Estilização    | Tailwind CSS v4                 |
+| Banco de Dados | Dexie.js v4 + dexie-react-hooks |
+| Gráficos       | Recharts                        |
+| Datas          | date-fns                        |
+| Ícones         | Lucide React                    |
+| Roteamento     | React Router v7                 |
+| SEO/Head       | react-helmet-async              |
+| Lint           | ESLint + typescript-eslint      |
+| PWA            | vite-plugin-pwa                 |
 
 ## Instalação
 
 ```bash
 # Clonar o repositório
-git clone <https://github.com/hedimauro260/apm-lite.git>
+git clone https://github.com/hedimauro260/apm-lite.git
 cd apm-lite
 
 # Instalar dependências
@@ -59,32 +64,44 @@ npm run dev
 ## 📜 Scripts Disponíveis
 
 npm run dev # Servidor de desenvolvimento (HMR)
-npm run build # Build de produção
+npm run build # Build de produção (tsc + vite build)
 npm run preview # Preview do build local
 
 ## Estrutura do Projeto
 
 src/
 ├── components/
-│ ├── layout/ # AppLayout, Sidebar, Header
-│ ├── modules/ # Componentes complexos (WalletCard, AssetsListView)
-│ ├── modals/ # Todos os modais
-│ └── ui/ # Componentes base (Button, Modal, Toast)
-├── contexts/ # ThemeContext, ToastProvider
-├── database/ # Dexie schema + seed
-├── hooks/ # Custom hooks (usePortfolio, useWallets, etc.)
-├── lib/ # Utils (formatCurrency, cn, backup)
-├── pages/ # Dashboard, Wallets, Assets, Transactions, Goals
-├── services/ # GoalService (lógica de negócio isolada)
-└── types/ # TypeScript interfaces
+│ ├── layout/ # AppLayout, Sidebar, Header, PageHeader, Footer
+│ ├── modals/ # Modais compartilhados (Wallet, Site, Backup/Restore, etc.)
+│ ├── modules/ # Componentes complexos (AllTransactions)
+│ └── ui/ # Componentes base (Button, Input, Modal, Toast, Calendar)
+├── contexts/ # ThemeContext, AppContext
+├── database/ # Dexie schema (v6) + instância
+├── lib/ # Utils (format, colors, backup, constantes)
+├── pages/
+│ ├── Dashboard/ # Dashboard + componentes dedicados
+│ ├── Wallets/ # WalletsPage + cards e context menu
+│ ├── Assets/ # AssetsPage + grid, tabela, modais e lógica
+│ ├── Websites/ # WebsitesPage + tabela, movimentações e lógica
+│ ├── Transactions/ # TransactionsPage
+│ └── Goals/ # GoalsPage + tabelas, modais e lógica
+└── types/ # TypeScript interfaces (wallet, asset, site, goal, etc.)
+
+### Lógica por página
+
+Cada página possui seus próprios arquivos de lógica pura:
+
+- `assetsLogic.ts` (Assets)
+- `sitesLogic.ts` (Websites)
+- `goalLogic.ts` (Goals)
 
 ## 🏗️ Arquitetura
 
 ### Camadas
 
-UI Layer: Componentes React puros, recebem props
-Hook Layer: useWallets, usePortfolio, etc. - orquestram estado
-Service Layer: GoalService - lógica de negócio complexa
+UI Layer: Componentes React que renderizam os dados
+Page Layer: Páginas orquestram estado com useLiveQuery (Dexie)
+Logic Layer: Funções puras por página (cálculos, snapshots, saldos)
 Data Layer: Dexie (IndexedDB) - persistência local
 
 ### Princípios
@@ -92,21 +109,47 @@ Data Layer: Dexie (IndexedDB) - persistência local
 Separação de responsabilidades: UI não faz cálculos
 Snapshots imutáveis: Goals arquivados nunca mudam
 Transações atômicas: Backup/Restore são seguros
-DRY: Hooks reutilizáveis em múltiplas páginas
+DRY: Lógica reutilizável dentro da página e componentes compartilhados
+Performance: Memoização e code splitting para reduzir bundle size
+
+### 🗄️ Banco de Dados
+
+O app usa Dexie (IndexedDB) na versão 6 do schema, com 8 tabelas:
+
+- `wallets` - carteiras
+- `transactions` - transações financeiras
+- `assets` - ativos monitorados
+- `assetPositions` - posições de ativos por carteira
+- `assetMovements` - movimentações de ativos
+- `goals` - metas semanais
+- `sites` - websites/exchanges monitorados
+- `siteMovements` - movimentações de sites (earn/withdraw)
 
 ### 📱 PWA
 
-O app é instalável como PWA. Após o build:
-Acesse via HTTPS (ou localhost)
-Clique em "Install App" na sidebar
-Ou use o ícone de instalação do navegador
+O app é instalável como PWA com autoUpdate. Após o build:
+
+- Acesse via HTTPS (ou localhost)
+- Clique em "Install App" na sidebar
+- Ou use o ícone de instalação do navegador
+
+O Service Worker inclui runtime caching para Google Fonts e API da CoinGecko.
 
 ### 🔐 Backup & Restore
 
 Localização: Sidebar → "Backup & Restore"
-Export: Gera arquivo JSON com todos os dados
+Export: Gera arquivo JSON com todos os dados (8 tabelas)
 Import: Restaura via transação atômica (rollback em caso de erro)
 Atenção: Import substitui TODOS os dados atuais
+
+### ⚠️ IMPORTANTE: Mudança no Banco de Dados (Breaking Change)
+
+A partir da versão 0.11.0, o schema do banco de dados foi atualizado para a versão 6 (adição da tabela websites e novos índices).
+
+```
+🚨 Backups gerados na versão 0.10.0 ou anteriores NÃO são compatíveis com esta versão.
+Se você está atualizando de uma versão antiga, será necessário reinserir os dados manualmente ou desenvolver um script de migração customizado.
+```
 
 ### 📄 Licença
 

@@ -1,375 +1,538 @@
-// src/components/modals/AddTransactionModal.tsx
-import { useState, useEffect } from 'react';
-import { Modal } from '../ui/Modal';
-import { Button } from '../ui/Button';
-import { Input } from '../ui/Input';
-import { type Wallet } from '../../types';
-import { ChevronDown, Plus, Minus } from 'lucide-react';
-import { cn } from '../../lib/utils';
+import { useEffect, useState } from "react";
+import {
+    AlertCircle,
+    ArrowDownRight,
+    ArrowLeftRight,
+    ArrowUpRight,
+    Calendar,
+    Check,
+    Clock,
+    Minus,
+    Plus,
+} from "lucide-react";
+import { Modal } from "../ui/Modal";
+import { Button } from "../ui/Button";
+import { Input } from "../ui/Input";
+import { Switch } from "../ui/Switch";
+import { cn } from "../../lib/utils";
+import type { TransactionStatus, TransactionType, Wallet } from "../../types";
 
-export interface AddTransactionModalProps {
-    isOpen: boolean;
-    onClose: () => void;
-    wallets: Wallet[];
-    onSubmit: (data: {
-        type: 'deposit' | 'withdraw' | 'transfer' | 'adjust';
-        walletId: string;
-        relatedWalletId?: string;
-        amount: number;
-        coin: string;
-        status: 'completed' | 'pending' | 'failed';
-        date: string;
-        description?: string;
-        website?: string;
-    }) => void;
-    initialType?: 'deposit' | 'withdraw' | 'transfer' | 'adjust';
-    initialWalletId?: string;
+export type AdjustDirection = "add" | "remove";
+
+interface TransactionTypeOption {
+    value: TransactionType;
+    label: string;
+    subtitle: string;
+    icon: typeof ArrowDownRight;
+    activeClass: string;
+    iconClass: string;
 }
 
-const TX_TYPES = [
-    { value: 'deposit', label: 'Deposit', color: '#22C55E' },
-    { value: 'withdraw', label: 'Withdraw', color: '#EF4444' },
-    { value: 'transfer', label: 'Transfer', color: '#3B82F6' },
-    { value: 'adjust', label: 'Adjust', color: '#F59E0B' },
+const TRANSACTION_TYPES: TransactionTypeOption[] = [
+    {
+        value: "deposit",
+        label: "Deposit",
+        subtitle: "Add funds",
+        icon: ArrowDownRight,
+        activeClass: "border-success bg-success/10",
+        iconClass: "text-success",
+    },
+    {
+        value: "withdraw",
+        label: "Withdraw",
+        subtitle: "Remove funds",
+        icon: ArrowUpRight,
+        activeClass: "border-danger bg-danger/10",
+        iconClass: "text-danger",
+    },
+    {
+        value: "transfer",
+        label: "Transfer",
+        subtitle: "Move between wallets",
+        icon: ArrowLeftRight,
+        activeClass: "border-primary bg-primary/10",
+        iconClass: "text-primary",
+    },
+    {
+        value: "adjust",
+        label: "Adjust",
+        subtitle: "Correct balance",
+        icon: AlertCircle,
+        activeClass: "border-warning bg-warning/10",
+        iconClass: "text-warning",
+    },
 ];
 
-// ✅ Usar as const para garantir os tipos literais
-const ADJUST_ACTIONS = [
-    { value: 'add' as const, label: 'Add', icon: Plus, color: '#22C55E' },
-    { value: 'remove' as const, label: 'Remove', icon: Minus, color: '#EF4444' },
+const STATUS_OPTIONS: { value: TransactionStatus; label: string }[] = [
+    { value: "completed", label: "Completed" },
+    { value: "pending", label: "Pending" },
+    { value: "failed", label: "Failed" },
 ];
 
-const COINS = ['USD', 'EUR', 'GBP', 'BRL', 'BTC', 'ETH', 'SOL'];
+export interface AddTransactionData {
+    type: TransactionType;
+    walletId: string;
+    relatedWalletId?: string;
+    amount: number;
+    direction?: AdjustDirection;
+    status: TransactionStatus;
+    date: string;
+    description?: string;
+    website?: string;
+    countsTowardsGoals?: boolean;
+}
+
+export interface AddTransactionModalProps {
+    open: boolean;
+    wallets: Wallet[];
+    defaultType?: TransactionType;
+    defaultWalletId?: string;
+    onClose: () => void;
+    onSubmit: (data: AddTransactionData) => void;
+}
+
+function toDateInputValue(date: Date): string {
+    const year = date.getFullYear();
+    const month = String(date.getMonth() + 1).padStart(2, "0");
+    const day = String(date.getDate()).padStart(2, "0");
+    return `${year}-${month}-${day}`;
+}
+
+function toTimeInputValue(date: Date): string {
+    const hours = String(date.getHours()).padStart(2, "0");
+    const minutes = String(date.getMinutes()).padStart(2, "0");
+    return `${hours}:${minutes}`;
+}
 
 export function AddTransactionModal({
-    isOpen,
-    onClose,
+    open,
     wallets,
+    defaultType = "deposit",
+    defaultWalletId,
+    onClose,
     onSubmit,
-    initialType,
-    initialWalletId
 }: AddTransactionModalProps) {
-    const [type, setType] = useState<'deposit' | 'withdraw' | 'transfer' | 'adjust'>('deposit');
-    const [adjustAction, setAdjustAction] = useState<'add' | 'remove'>('add');
-    const [walletId, setWalletId] = useState('');
-    const [relatedWalletId, setRelatedWalletId] = useState('');
-    const [amount, setAmount] = useState('');
-    const [coin, setCoin] = useState('USD');
-    const [status, setStatus] = useState<'completed' | 'pending' | 'failed'>('completed');
-    const [date, setDate] = useState(new Date().toISOString().slice(0, 16));
-    const [description, setDescription] = useState('');
-    const [website, setWebsite] = useState('');
+    const [type, setType] = useState<TransactionType>("deposit");
+    const [walletId, setWalletId] = useState("");
+    const [toWalletId, setToWalletId] = useState("");
+    const [amount, setAmount] = useState("");
+    const [direction, setDirection] = useState<AdjustDirection>("add");
+    const [status, setStatus] = useState<TransactionStatus>("completed");
+    const [date, setDate] = useState("");
+    const [time, setTime] = useState("");
+    const [description, setDescription] = useState("");
+    const [website, setWebsite] = useState("");
+    const [countsTowardsGoals, setCountsTowardsGoals] = useState(true);
     const [errors, setErrors] = useState<Record<string, string>>({});
 
     useEffect(() => {
-        if (isOpen) {
-            if (initialType) setType(initialType);
-            if (initialWalletId) setWalletId(initialWalletId);
-            setAdjustAction('add');
-        }
-    }, [isOpen, initialType, initialWalletId]);
+        if (!open) return;
+        const now = new Date();
+        const firstWallet =
+            wallets.find((w) => w.id === defaultWalletId) ??
+            wallets.find((w) => w.status === "active") ??
+            wallets[0];
 
-    const resetForm = () => {
-        setType('deposit');
-        setAdjustAction('add');
-        setWalletId('');
-        setRelatedWalletId('');
-        setAmount('');
-        setCoin('USD');
-        setStatus('completed');
-        setDate(new Date().toISOString().slice(0, 16));
-        setDescription('');
-        setWebsite('');
+        setType(defaultType);
+        setWalletId(firstWallet?.id ?? "");
+        setToWalletId("");
+        setAmount("");
+        setDirection("add");
+        setStatus("completed");
+        setDate(toDateInputValue(now));
+        setTime(toTimeInputValue(now));
+        setDescription("");
+        setWebsite("");
+        setCountsTowardsGoals(true);
         setErrors({});
+    }, [open, defaultType, defaultWalletId, wallets]);
+
+    const isTransfer = type === "transfer";
+    const isAdjust = type === "adjust";
+
+    const selectableWallets = wallets.filter((w) => w.status === "active");
+    const walletList = selectableWallets.length > 0 ? selectableWallets : wallets;
+
+    const handleTypeChange = (nextType: TransactionType) => {
+        setType(nextType);
+        if (nextType !== "transfer") setToWalletId("");
+        setErrors((prev) => {
+            const { walletId: _w, toWalletId: _t, amount: _a, type: _ty, ...rest } = prev;
+            void _w;
+            void _t;
+            void _a;
+            void _ty;
+            return rest;
+        });
     };
 
-    useEffect(() => {
-        if (!isOpen) {
-            const timer = setTimeout(resetForm, 300);
-            return () => clearTimeout(timer);
+    const validate = (): Record<string, string> => {
+        const nextErrors: Record<string, string> = {};
+        if (!walletId) nextErrors.walletId = "Select a wallet";
+        if (isTransfer) {
+            if (!toWalletId) nextErrors.toWalletId = "Select the destination wallet";
+            else if (toWalletId === walletId)
+                nextErrors.toWalletId = "Must be different from the source wallet";
         }
-    }, [isOpen]);
+        const parsedAmount = parseFloat(amount);
+        if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
+            nextErrors.amount = "Enter a valid amount greater than zero";
+        }
+        if (!date) nextErrors.date = "Select a date";
+        return nextErrors;
+    };
 
-    const handleSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
-        const newErrors: Record<string, string> = {};
-
-        if (!walletId) newErrors.walletId = 'Select a wallet';
-        if (type === 'transfer' && !relatedWalletId) newErrors.relatedWalletId = 'Select destination wallet';
-        if (!amount || parseFloat(amount) <= 0) newErrors.amount = 'Valid amount is required';
-
-        if (Object.keys(newErrors).length > 0) {
-            setErrors(newErrors);
+    const handleSubmit = () => {
+        const nextErrors = validate();
+        if (Object.keys(nextErrors).length > 0) {
+            setErrors(nextErrors);
             return;
         }
 
-        let finalAmount: number;
-
-        if (type === 'adjust') {
-            finalAmount = adjustAction === 'add'
-                ? parseFloat(amount)
-                : -parseFloat(amount);
-        } else {
-            finalAmount = type === 'deposit'
-                ? parseFloat(amount)
-                : -parseFloat(amount);
-        }
-
+        const isoDate = new Date(`${date}T${time || "00:00"}`).toISOString();
         onSubmit({
             type,
             walletId,
-            relatedWalletId: type === 'transfer' ? relatedWalletId : undefined,
-            amount: finalAmount,
-            coin,
+            relatedWalletId: isTransfer ? toWalletId : undefined,
+            amount: parseFloat(amount),
+            direction: isAdjust ? direction : undefined,
             status,
-            date: new Date(date).toISOString(),
+            date: isoDate,
             description: description.trim() || undefined,
-            website: (type === 'deposit' || type === 'withdraw') ? website.trim() || undefined : undefined,
+            website: website.trim() || undefined,
+            countsTowardsGoals: type === "deposit" ? countsTowardsGoals : undefined,
         });
-
-        resetForm();
-        onClose();
     };
 
-    const showAdjustActions = type === 'adjust';
+    const typeFieldClass =
+        "w-full bg-surface border border-border rounded-md text-text-primary px-4 h-10 text-base focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary focus-visible:border-transparent disabled:pointer-events-none disabled:opacity-50";
 
     return (
-        <Modal isOpen={isOpen} onClose={onClose} title="Add Transaction" size="lg">
-            <form onSubmit={handleSubmit} className="space-y-6">
-                {/* Transaction Type */}
+        <Modal
+            isOpen={open}
+            onClose={onClose}
+            title="Add Transaction"
+            description="Create a new transaction for your wallet"
+            size="lg"
+            footer={
+                <>
+                    <Button variant="secondary" onClick={onClose}>
+                        Cancel
+                    </Button>
+                    <Button variant="primary" onClick={handleSubmit}>
+                        <Plus className="h-4 w-4" />
+                        Add Transaction
+                    </Button>
+                </>
+            }
+        >
+            <div className="space-y-5">
+                {/* Tipo de transação */}
                 <div>
-                    <label className="block text-sm font-medium text-text-secondary mb-2">
+                    <span className="block text-sm font-medium text-text-secondary">
                         Transaction Type
-                    </label>
-                    <div className="grid grid-cols-4 gap-2">
-                        {TX_TYPES.map((txType) => (
-                            <button
-                                key={txType.value}
-                                type="button"
-                                onClick={() => {
-                                    setType(txType.value as any);
-                                    if (errors.walletId || errors.relatedWalletId) {
-                                        setErrors({});
-                                    }
-                                }}
-                                className={cn(
-                                    'flex flex-col items-center gap-2 p-3 rounded-lg border transition-all',
-                                    type === txType.value
-                                        ? 'border-primary bg-primary/10'
-                                        : 'border-border bg-surface hover:border-border-light'
-                                )}
-                            >
-                                <div
-                                    className="w-3 h-3 rounded-full"
-                                    style={{ backgroundColor: txType.color }}
-                                />
-                                <span className="text-xs font-medium text-text-primary">{txType.label}</span>
-                            </button>
-                        ))}
-                    </div>
-                </div>
-
-                {/* Wallet Selection + Adjust Action */}
-                <div className="grid grid-cols-2 gap-4">
-                    <div>
-                        <label className="block text-sm font-medium text-text-secondary mb-2">
-                            {type === 'transfer' ? 'From Wallet *' : 'Wallet *'}
-                        </label>
-                        <div className="relative">
-                            <select
-                                value={walletId}
-                                onChange={(e) => {
-                                    setWalletId(e.target.value);
-                                    if (errors.walletId) setErrors({ ...errors, walletId: '' });
-                                }}
-                                className={cn(
-                                    'w-full h-10 px-4 bg-surface border border-border rounded-md text-text-primary appearance-none',
-                                    'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                                    errors.walletId && 'border-danger focus-visible:ring-danger'
-                                )}
-                            >
-                                <option value="">Select wallet</option>
-                                {wallets.map((w) => (
-                                    <option key={w.id} value={w.id}>{w.name}</option>
-                                ))}
-                            </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
-                        </div>
-                        {errors.walletId && <p className="text-sm text-danger mt-1">{errors.walletId}</p>}
-                    </div>
-
-                    {/* Add/Remove para Adjust */}
-                    {showAdjustActions && (
-                        <div>
-                            <label className="block text-sm font-medium text-text-secondary mb-2">
-                                Action *
-                            </label>
-                            <div className="grid grid-cols-2 gap-2">
-                                {ADJUST_ACTIONS.map((action) => {
-                                    const Icon = action.icon;
-                                    const isSelected = adjustAction === action.value;
-                                    return (
-                                        <button
-                                            key={action.value}
-                                            type="button"
-                                            onClick={() => setAdjustAction(action.value)} // ✅ Agora funciona
-                                            className={cn(
-                                                'flex items-center justify-center gap-2 p-3 rounded-lg border transition-all',
-                                                isSelected
-                                                    ? 'border-primary bg-primary/10'
-                                                    : 'border-border bg-surface hover:border-border-light'
-                                            )}
-                                        >
-                                            <Icon
-                                                className={cn(
-                                                    'h-4 w-4',
-                                                    isSelected ? 'text-primary' : 'text-text-muted'
-                                                )}
-                                            />
-                                            <span className={cn(
-                                                'text-sm font-medium',
-                                                isSelected ? 'text-text-primary' : 'text-text-secondary'
-                                            )}>
-                                                {action.label}
-                                            </span>
-                                        </button>
-                                    );
-                                })}
-                            </div>
-                            <p className="text-xs text-text-muted mt-1.5">
-                                {adjustAction === 'add'
-                                    ? '➕ Adding funds to the wallet'
-                                    : '➖ Removing funds from the wallet'}
-                            </p>
-                        </div>
-                    )}
-
-                    {!showAdjustActions && type === 'transfer' && (
-                        <div>
-                            <label className="block text-sm font-medium text-text-secondary mb-2">
-                                To Wallet *
-                            </label>
-                            <div className="relative">
-                                <select
-                                    value={relatedWalletId}
-                                    onChange={(e) => {
-                                        setRelatedWalletId(e.target.value);
-                                        if (errors.relatedWalletId) setErrors({ ...errors, relatedWalletId: '' });
-                                    }}
+                    </span>
+                    <div className="mt-1.5 grid grid-cols-2 lg:grid-cols-4 gap-2">
+                        {TRANSACTION_TYPES.map((option) => {
+                            const Icon = option.icon;
+                            const isActive = type === option.value;
+                            return (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => handleTypeChange(option.value)}
                                     className={cn(
-                                        'w-full h-10 px-4 bg-surface border border-border rounded-md text-text-primary appearance-none',
-                                        'focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary',
-                                        errors.relatedWalletId && 'border-danger focus-visible:ring-danger'
+                                        "flex items-center md:flex-col md:justify-center gap-2 rounded-md border px-3 py-2 text-left transition-all duration-150",
+                                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                                        isActive
+                                            ? option.activeClass
+                                            : "border-border bg-surface hover:border-border-hover"
                                     )}
                                 >
-                                    <option value="">Select destination</option>
-                                    {wallets.filter(w => w.id !== walletId).map((w) => (
-                                        <option key={w.id} value={w.id}>{w.name}</option>
-                                    ))}
-                                </select>
-                                <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
-                            </div>
-                            {errors.relatedWalletId && <p className="text-sm text-danger mt-1">{errors.relatedWalletId}</p>}
-                        </div>
-                    )}
+                                    <span
+                                        className={cn(
+                                            "p-1.5 rounded shrink-0",
+                                            isActive ? option.iconClass : "text-text-muted"
+                                        )}
+                                    >
+                                        <Icon className="h-4 w-4" />
+                                    </span>
+                                    <span className="min-w-0">
+                                        <span
+                                            className={cn(
+                                                "block text-center text-sm font-medium",
+                                                isActive ? "text-text-primary" : "text-text-secondary"
+                                            )}
+                                        >
+                                            {option.label}
+                                        </span>
+                                        <span className="block text-center text-[10px] text-text-muted">
+                                            {option.subtitle}
+                                        </span>
+                                    </span>
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
 
-                    {!showAdjustActions && type !== 'transfer' && (
-                        <div className="flex items-end">
-                            <div className="w-full h-10 flex items-center text-text-muted text-sm border border-dashed border-border rounded-md px-4">
-                                {type === 'deposit' ? '💰 Deposit transaction' : '🏦 Withdraw transaction'}
-                            </div>
+                {/* Carteiras */}
+                <div className={cn("grid gap-4", isTransfer ? "grid-cols-1 sm:grid-cols-2" : "grid-cols-1")}>
+                    <div>
+                        <label className="block text-sm font-medium text-text-secondary">
+                            {isTransfer ? "From Wallet" : "Wallet"}
+                        </label>
+                        <select
+                            value={walletId}
+                            onChange={(e) => {
+                                setWalletId(e.target.value);
+                                setErrors((prev) => {
+                                    const { walletId: _w, toWalletId: _t, ...rest } = prev;
+                                    void _w;
+                                    void _t;
+                                    return rest;
+                                });
+                                if (e.target.value === toWalletId) setToWalletId("");
+                            }}
+                            className={cn(typeFieldClass, "mt-1.5", errors.walletId && "border-danger focus-visible:ring-danger")}
+                        >
+                            <option value="" disabled>
+                                Select a wallet
+                            </option>
+                            {walletList.map((wallet) => (
+                                <option key={wallet.id} value={wallet.id}>
+                                    {wallet.name}
+                                </option>
+                            ))}
+                        </select>
+                        {errors.walletId && (
+                            <p className="mt-1 text-sm text-danger" role="alert">
+                                {errors.walletId}
+                            </p>
+                        )}
+                    </div>
+
+                    {isTransfer && (
+                        <div>
+                            <label className="block text-sm font-medium text-text-secondary">
+                                To Wallet
+                            </label>
+                            <select
+                                value={toWalletId}
+                                onChange={(e) => {
+                                    setToWalletId(e.target.value);
+                                    setErrors((prev) => {
+                                        const { toWalletId: _t, ...rest } = prev;
+                                        void _t;
+                                        return rest;
+                                    });
+                                }}
+                                className={cn(typeFieldClass, "mt-1.5", errors.toWalletId && "border-danger focus-visible:ring-danger")}
+                            >
+                                <option value="" disabled>
+                                    Select a wallet
+                                </option>
+                                {walletList.map((wallet) => (
+                                    <option key={wallet.id} value={wallet.id} disabled={wallet.id === walletId}>
+                                        {wallet.name}
+                                    </option>
+                                ))}
+                            </select>
+                            {errors.toWalletId && (
+                                <p className="mt-1 text-sm text-danger" role="alert">
+                                    {errors.toWalletId}
+                                </p>
+                            )}
                         </div>
                     )}
                 </div>
 
-                {/* Amount & Coin */}
-                <div className="grid grid-cols-2 gap-4">
+                {/* Direção do ajuste */}
+                {isAdjust && (
+                    <div>
+                        <label className="block text-sm font-medium text-text-secondary">
+                            Adjustment Direction
+                        </label>
+                        <div className="mt-1.5 grid grid-cols-2 gap-2">
+                            <button
+                                type="button"
+                                onClick={() => setDirection("add")}
+                                className={cn(
+                                    "flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-all duration-150",
+                                    direction === "add"
+                                        ? "border-success bg-success/10 text-success"
+                                        : "border-border bg-surface text-text-secondary hover:border-border-hover"
+                                )}
+                            >
+                                <Plus className="h-4 w-4" />
+                                Add
+                            </button>
+                            <button
+                                type="button"
+                                onClick={() => setDirection("remove")}
+                                className={cn(
+                                    "flex items-center justify-center gap-2 rounded-md border px-3 py-2 text-sm font-medium transition-all duration-150",
+                                    direction === "remove"
+                                        ? "border-danger bg-danger/10 text-danger"
+                                        : "border-border bg-surface text-text-secondary hover:border-border-hover"
+                                )}
+                            >
+                                <Minus className="h-4 w-4" />
+                                Remove
+                            </button>
+                        </div>
+                    </div>
+                )}
+
+                {/* Valor */}
+                <div>
+                    <label className="block text-sm font-medium text-text-secondary">
+                        Amount <span className="text-text-muted">(USD)</span>
+                    </label>
                     <Input
-                        label="Amount *"
+                        className="mt-1.5"
                         type="number"
-                        step="any"
+                        min="0"
+                        step="0.01"
+                        inputMode="decimal"
                         placeholder="0.00"
                         value={amount}
                         onChange={(e) => {
                             setAmount(e.target.value);
-                            if (errors.amount) setErrors({ ...errors, amount: '' });
+                            setErrors((prev) => {
+                                const { amount: _a, ...rest } = prev;
+                                void _a;
+                                return rest;
+                            });
                         }}
                         error={errors.amount}
                     />
-                    <div>
-                        <label className="block text-sm font-medium text-text-secondary mb-2">
-                            Coin *
-                        </label>
-                        <div className="relative">
-                            <select
-                                value={coin}
-                                onChange={(e) => setCoin(e.target.value)}
-                                className="w-full h-10 px-4 bg-surface border border-border rounded-md text-text-primary appearance-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                            >
-                                {COINS.map((c) => (
-                                    <option key={c} value={c}>{c}</option>
-                                ))}
-                            </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
-                        </div>
-                    </div>
                 </div>
 
-                {/* Date & Status */}
-                <div className="grid grid-cols-2 gap-4">
-                    <Input
-                        label="Date & Time"
-                        type="datetime-local"
-                        value={date}
-                        onChange={(e) => setDate(e.target.value)}
-                    />
-                    <div>
-                        <label className="block text-sm font-medium text-text-secondary mb-2">
-                            Status
-                        </label>
-                        <div className="relative">
-                            <select
-                                value={status}
-                                onChange={(e) => setStatus(e.target.value as any)}
-                                className="w-full h-10 px-4 bg-surface border border-border rounded-md text-text-primary appearance-none focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary"
-                            >
-                                <option value="completed">Completed</option>
-                                <option value="pending">Pending</option>
-                                <option value="failed">Failed</option>
-                            </select>
-                            <ChevronDown className="absolute right-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
+                {/* Contabilização para Goals (apenas depósito) */}
+                {type === "deposit" && (
+                    <div className="flex items-center justify-between gap-4 rounded-lg border border-border bg-surface-elevated/40 px-4 py-3">
+                        <div className="min-w-0">
+                            <p className="text-sm font-medium text-text-primary">
+                                Count towards goals
+                            </p>
+                            <p className="text-xs text-text-muted">
+                                Include this deposit when calculating weekly goals
+                            </p>
                         </div>
+                        <Switch
+                            checked={countsTowardsGoals}
+                            onChange={setCountsTowardsGoals}
+                        />
                     </div>
-                </div>
-
-                {/* Description */}
-                <Input
-                    label="Description (optional)"
-                    placeholder="e.g., Salary, ATM withdrawal"
-                    value={description}
-                    onChange={(e) => setDescription(e.target.value)}
-                />
-
-                {/* Website */}
-                {(type === 'deposit' || type === 'withdraw') && (
-                    <Input
-                        label="Website (optional)"
-                        placeholder="e.g., bank.example.com"
-                        value={website}
-                        onChange={(e) => setWebsite(e.target.value)}
-                    />
                 )}
 
-                {/* Actions */}
-                <div className="flex justify-end gap-3 pt-4 border-t border-border">
-                    <Button type="button" variant="ghost" onClick={onClose}>
-                        Cancel
-                    </Button>
-                    <Button type="submit" variant="primary">
-                        Add Transaction
-                    </Button>
+                {/* Data e hora */}
+                <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                    <div>
+                        <label className="block text-sm font-medium text-text-secondary">
+                            Date
+                        </label>
+                        <div className="mt-1.5 relative">
+                            <Calendar className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
+                            <input
+                                type="date"
+                                value={date}
+                                onChange={(e) => {
+                                    setDate(e.target.value);
+                                    setErrors((prev) => {
+                                        const { date: _d, ...rest } = prev;
+                                        void _d;
+                                        return rest;
+                                    });
+                                }}
+                                className={cn(
+                                    typeFieldClass,
+                                    "pl-10",
+                                    errors.date && "border-danger focus-visible:ring-danger"
+                                )}
+                            />
+                        </div>
+                        {errors.date && (
+                            <p className="mt-1 text-sm text-danger" role="alert">
+                                {errors.date}
+                            </p>
+                        )}
+                    </div>
+                    <div>
+                        <label className="block text-sm font-medium text-text-secondary">
+                            Time
+                        </label>
+                        <div className="mt-1.5 relative">
+                            <Clock className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-text-muted pointer-events-none" />
+                            <input
+                                type="time"
+                                value={time}
+                                onChange={(e) => setTime(e.target.value)}
+                                className={cn(typeFieldClass, "pl-10")}
+                            />
+                        </div>
+                    </div>
                 </div>
-            </form>
+
+                {/* Status */}
+                <div>
+                    <label className="block text-sm font-medium text-text-secondary">
+                        Status
+                    </label>
+                    <div className="mt-1.5 flex flex-wrap gap-2">
+                        {STATUS_OPTIONS.map((option) => {
+                            const isActive = status === option.value;
+                            return (
+                                <button
+                                    key={option.value}
+                                    type="button"
+                                    onClick={() => setStatus(option.value)}
+                                    className={cn(
+                                        "flex items-center gap-1.5 rounded-md border px-3 py-2 text-sm font-medium transition-all duration-150",
+                                        "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary",
+                                        isActive
+                                            ? "border-primary bg-primary/10 text-text-primary"
+                                            : "border-border bg-surface text-text-secondary hover:border-border-hover"
+                                    )}
+                                >
+                                    {isActive && <Check className="h-3.5 w-3.5 text-primary" />}
+                                    {option.label}
+                                </button>
+                            );
+                        })}
+                    </div>
+                </div>
+
+                {/* Website (apenas depósito e retirada) */}
+                {(type === "deposit" || type === "withdraw") && (
+                    <div>
+                        <label className="block text-sm font-medium text-text-secondary">
+                            Website <span className="text-text-muted">(optional)</span>
+                        </label>
+                        <Input
+                            className="mt-1.5"
+                            placeholder="e.g. Binance, Wise, Bank App"
+                            value={website}
+                            onChange={(e) => setWebsite(e.target.value)}
+                        />
+                    </div>
+                )}
+
+                {/* Descrição */}
+                <div>
+                    <label className="block text-sm font-medium text-text-secondary">
+                        Description <span className="text-text-muted">(optional)</span>
+                    </label>
+                    <textarea
+                        value={description}
+                        onChange={(e) => setDescription(e.target.value)}
+                        placeholder="e.g. Salary deposit, exchange withdrawal..."
+                        rows={2}
+                        className="mt-1.5 w-full rounded-md bg-surface border border-border text-text-primary placeholder:text-text-muted px-4 py-2 text-base transition-all duration-150 hover:border-border-hover focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-primary resize-none"
+                    />
+                </div>
+            </div>
         </Modal>
     );
 }

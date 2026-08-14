@@ -5,6 +5,105 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/).
 
+## [0.13.0] - 2026-08-14
+
+### 🎨 Reformulação Completa de UI/UX
+
+- **Sidebar**: Agora expande e encolhe (colapsável) para melhor uso do espaço em telas menores
+- **Header**: Implementação de header responsivo com versão mobile dedicada
+- **Calendário**: Redesign do CalendarPopover com melhor hierarquia visual e feedback de hover
+- **Main Content**: Ajustes de espaçamento, tipografia e alinhamento em todas as páginas
+- **Modais**: Reformulação completa
+  - Modais eliminados: DeleteAssetModal (substituído por confirmação inline)
+  - Modais simplificados: AddWalletModal, EditWalletModal, AddTransactionModal
+  - Novos padrões visuais aplicados em todos os modais restantes
+- **Tamanhos de elementos**: Padronização de paddings, margens e fontes em toda a aplicação
+
+### 📱 Responsividade Completa
+
+- Implementação de breakpoints consistentes (sm, md, lg, xl, 2xl)
+- Grids adaptativos em todas as tabelas e cards
+- Menu mobile com drawer lateral
+- Tabelas com scroll horizontal em telas pequenas
+- Modais full-screen em dispositivos móveis
+
+### 🔧 Melhorias Técnicas
+
+- Otimização de re-renders com React.memo em componentes pesados
+- Lazy loading de ícones Lucide para reduzir bundle size
+- Melhoria na acessibilidade (aria-labels, focus management)
+- Animações de transição mais suaves (cubic-bezier)
+
+---
+
+## [0.12.0] - 2026-08-05
+
+### 🌐 Nova Página: Website
+
+- Página dedicada para gerenciar websites/exchanges monitorados
+- Rastreamento de depósitos por website (regra de negócio do Goals)
+- Estatísticas de volume por website
+- Integração com filtro de transações por website
+
+### 📦 Reestruturação do Projeto
+
+- **Nova arquitetura de pastas**: Cada página agora tem sua própria pasta
+
+- Separação clara entre componentes de página e componentes compartilhados
+- Melhor organização e manutenção do código
+
+### 🔧 Dependências
+
+- **Adicionadas**:
+  - `eslint` + plugins (linting e formatação de código)
+  - `react-is` (otimização de componentes React)
+- **Removidas**:
+  - `uuid` (substituído por `crypto.randomUUID()` nativo)
+
+---
+
+## [0.11.0] - 2026-07-26
+
+### ⚠️ BREAKING CHANGE: Schema do Banco de Dados
+
+- **Mudança na estrutura do Dexie**: O backup da versão 0.10.0 **não é compatível** com esta versão
+- Nova versão do banco: v4 (incrementada de v3)
+- Migração automática de dados não implementada (usuário deve fazer novo backup após atualização)
+- **Motivo**: Otimização de índices e normalização de dados para suportar a nova página Website
+
+### 🗄️ Mudanças no Banco de Dados
+
+- Nova tabela: `websites` (armazena exchanges/sites monitorados)
+- Novo índice em `transactions`: `website` (para consultas rápidas por website)
+- Atualização de índices em `assets` e `goals` para melhor performance
+- Remoção de campos obsoletos em tabelas antigas
+
+### 🔧 Melhorias de Performance
+
+- Queries otimizadas com índices adequados
+- Redução de scans completos em tabelas grandes
+- Cache de dados frequentes em memória
+
+---
+
+## Notas de Migração (0.10.0 → 0.13.0)
+
+### Para usuários da versão 0.10.0:
+
+1. **Faça backup dos seus dados** antes de atualizar (usando a função de backup da 0.10.0)
+2. Atualize para a versão 0.13.0
+3. **O backup da 0.10.0 não será compatível** com a nova versão
+4. Você precisará inserir os dados manualmente novamente ou usar um script de migração customizado
+
+### Para desenvolvedores:
+
+- A estrutura de pastas mudou significativamente
+- Componentes que eram globais agora estão dentro de `pages/[nome]/components/`
+- O schema do banco mudou (veja `src/database/db.ts`)
+- Novas dependências instaladas (execute `npm install`)
+
+---
+
 ## [0.10.1] - 2026-07-24
 
 ### Added
