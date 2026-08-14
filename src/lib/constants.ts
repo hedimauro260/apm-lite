@@ -3,7 +3,7 @@
  */
 
 // App version (used in the UI and in backup files)
-export const APP_VERSION = "0.13.0";
+export const APP_VERSION = "0.13.2";
 
 // Wallet types
 export const WALLET_TYPES = {

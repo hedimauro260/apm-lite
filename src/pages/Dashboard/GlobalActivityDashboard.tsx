@@ -9,6 +9,7 @@ import {
     Pencil,
     Plus,
     Search,
+    Trash2,
 } from 'lucide-react';
 import { type Transaction } from '../../types';
 import { cn, formatCurrency, generateId } from '../../lib/utils';
@@ -98,6 +99,14 @@ export function GlobalActivityDashboard() {
     const handleEditTransactionClick = (transactionId: string) => {
         const transaction = transactions.find((t) => t.id === transactionId);
         if (transaction) setEditingTransaction(transaction);
+    };
+
+    const handleDeleteTransaction = async (transactionId: string) => {
+        try {
+            await db.transactions.delete(transactionId);
+        } catch (error) {
+            console.error('Error deleting transaction from DB', error);
+        }
     };
 
     const rows = useMemo(() => {
@@ -366,14 +375,24 @@ export function GlobalActivityDashboard() {
                                         </td>
 
                                         <td className="px-6 py-2 text-right">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleEditTransactionClick(row.originalId)}
-                                                className="p-2 text-text-muted hover:text-primary hover:bg-surface-elevated rounded transition-colors"
-                                                title="Edit transaction"
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleEditTransactionClick(row.originalId)}
+                                                    className="p-2 text-text-muted hover:text-primary hover:bg-surface-elevated rounded transition-colors"
+                                                    title="Edit transaction"
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteTransaction(row.originalId)}
+                                                    className="p-2 text-text-muted hover:text-danger hover:bg-surface-elevated rounded transition-colors"
+                                                    title="Delete transaction"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );

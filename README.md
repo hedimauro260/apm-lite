@@ -90,6 +90,7 @@ src/
 ├── services/            # GoalService (lógica de negócio isolada da UI)
 ├── test/                # Setup do Vitest e mocks do Dexie
 └── types/               # Interfaces e tipos TypeScript globais
+```
 
 ### Lógica por página
 

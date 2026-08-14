@@ -5,6 +5,18 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/).
 
+## [0.13.2] - 2026-08-14
+
+### 🐛 Correções de Bugs
+
+- Correção do bug na contagem de assets no card das Wallets.
+
+### 📝 Melhorias de UI/UX
+
+- Adição do filtro "All time" na tabela All Transactions na pagina Wallet
+- Adição do botão deletar para transação
+- Adição da versão do db no JSON de backup
+
 ## [0.13.0] - 2026-08-14
 
 ### 🎨 Reformulação Completa de UI/UX

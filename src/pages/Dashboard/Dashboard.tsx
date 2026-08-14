@@ -75,6 +75,7 @@ export default function Dashboard() {
             status: "active",
             color: data.color,
             description: data.description,
+            assetIds: data.assetIds,
             createdAt: now,
             updatedAt: now,
         };

@@ -3,6 +3,7 @@ import { ArrowLeft, Download, FileUp, Upload } from "lucide-react";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { APP_VERSION } from "../../lib/utils";
+import { db } from "../../database/db";
 import { useToast } from "../ui/Toast";
 import {
   downloadBackup,
@@ -169,7 +170,7 @@ export function BackupRestoreModal({ open, onClose }: BackupRestoreModalProps) {
               <p className="mt-1 text-xs text-text-muted leading-relaxed">
                 The backup includes all wallets, transactions, assets, positions and movements,
                 goals and their snapshots, websites and website movements. The file also records
-                the app version (v{APP_VERSION}) used to create it.
+                the app version (v{APP_VERSION}) and database schema version (v{db.verno}) used to create it.
               </p>
             </div>
 
@@ -224,7 +225,15 @@ export function BackupRestoreModal({ open, onClose }: BackupRestoreModalProps) {
                 <p className="text-sm font-medium text-text-primary">Backup file detected</p>
                 <p className="mt-1 text-xs text-text-muted leading-relaxed">
                   This backup was created with app version{" "}
-                  <span className="font-semibold text-text-primary">v{backup.appVersion}</span> on{" "}
+                  <span className="font-semibold text-text-primary">v{backup.appVersion}</span>
+                  {backup.dbVersion !== undefined && (
+                    <>
+                      {" "}
+                      and database schema version{" "}
+                      <span className="font-semibold text-text-primary">v{backup.dbVersion}</span>
+                    </>
+                  )}{" "}
+                  on{" "}
                   <span className="text-text-primary">
                     {new Date(backup.exportedAt).toLocaleString()}
                   </span>

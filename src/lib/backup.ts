@@ -17,6 +17,7 @@ export type BackupTableName = (typeof BACKUP_TABLES)[number];
 export interface BackupPayload {
   app: string;
   appVersion: string;
+  dbVersion?: number;
   exportedAt: string;
   data: Record<BackupTableName, unknown[]>;
 }
@@ -26,6 +27,8 @@ export function isBackupPayload(value: unknown): value is BackupPayload {
   const record = value as Record<string, unknown>;
   if (record.app !== "APM Lite") return false;
   if (typeof record.appVersion !== "string") return false;
+  if (record.dbVersion !== undefined && typeof record.dbVersion !== "number")
+    return false;
   if (typeof record.exportedAt !== "string") return false;
   if (!record.data || typeof record.data !== "object") return false;
 
@@ -49,6 +52,7 @@ export async function exportBackup(): Promise<BackupPayload> {
   return {
     app: "APM Lite",
     appVersion: APP_VERSION,
+    dbVersion: db.verno,
     exportedAt: new Date().toISOString(),
     data: {
       wallets,

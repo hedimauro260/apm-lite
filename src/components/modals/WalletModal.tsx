@@ -66,7 +66,7 @@ export function WalletModal({
         if (isEditing && wallet) {
             setName(wallet.name);
             setType(wallet.type);
-            setAssetIds([]);
+            setAssetIds(wallet.assetIds ?? []);
             setDescription(wallet.description ?? "");
             setColor(wallet.color || COLOR_OPTIONS[0]);
         } else {

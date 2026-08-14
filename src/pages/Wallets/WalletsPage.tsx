@@ -81,9 +81,7 @@ export default function Wallets() {
 
     const assetsCountByWallet = wallets.reduce<Record<string, number>>(
         (acc, wallet) => {
-            acc[wallet.id] = transactions.filter(
-                (t) => t.walletId === wallet.id,
-            ).length
+            acc[wallet.id] = wallet.assetIds?.length ?? 0
             return acc
         },
         {},
@@ -103,6 +101,7 @@ export default function Wallets() {
             status: "active",
             color: data.color,
             description: data.description,
+            assetIds: data.assetIds,
             createdAt: now,
             updatedAt: now,
         }
@@ -121,6 +120,7 @@ export default function Wallets() {
             type: data.type,
             color: data.color,
             description: data.description,
+            assetIds: data.assetIds,
             updatedAt,
         }
         try {

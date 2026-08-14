@@ -21,4 +21,5 @@ export interface Wallet extends BaseEntity {
   status: WalletStatus
   color?: string
   description?: string
+  assetIds?: string[]
 }

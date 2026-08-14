@@ -2,7 +2,7 @@
   "name": "asset-portfolio-manager_local",
   "description": "Um gerenciador de portfólio financeiro pessoal que permite rastrear carteiras e ativos",
   "private": true,
-  "version": "0.13.0",
+  "version": "0.13.2",
   "type": "module",
   "license": "MIT",
   "author": {

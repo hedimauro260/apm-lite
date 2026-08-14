@@ -7,6 +7,7 @@ import {
     Pencil,
     Plus,
     Search,
+    Trash2,
 } from 'lucide-react';
 import { type Transaction } from '../../types';
 import { cn, formatCurrency, generateId } from '../../lib/utils';
@@ -102,6 +103,14 @@ export function AllTransactions() {
         if (transaction) setEditingTransaction(transaction);
     };
 
+    const handleDeleteTransaction = async (transactionId: string) => {
+        try {
+            await db.transactions.delete(transactionId);
+        } catch (error) {
+            console.error('Error deleting transaction from DB', error);
+        }
+    };
+
     const rows = useMemo(() => {
         return transactions.map<ActivityRow>((transaction) => {
             const wallet = wallets.find((item) => item.id === transaction.walletId);
@@ -122,14 +131,16 @@ export function AllTransactions() {
     }, [transactions, wallets]);
 
     const filteredRows = useMemo(() => {
-        const now = new Date();
-        const daysAgo = new Date(now.getTime() - Number(filterTime) * 24 * 60 * 60 * 1000);
+        const daysAgo =
+            filterTime === 'all'
+                ? null
+                : new Date(Date.now() - Number(filterTime) * 24 * 60 * 60 * 1000);
         const query = searchQuery.trim().toLowerCase();
 
         return rows
             .filter((row) => filterWallet === 'all' || row.walletId === filterWallet)
             .filter((row) => filterType === 'all' || row.displayType === filterType)
-            .filter((row) => new Date(row.date) >= daysAgo)
+            .filter((row) => (daysAgo === null ? true : new Date(row.date) >= daysAgo))
             .filter((row) => {
                 if (!query) return true;
 
@@ -268,6 +279,7 @@ export function AllTransactions() {
                         <option value="7">Last 7 Days</option>
                         <option value="30">Last 30 Days</option>
                         <option value="90">Last 90 Days</option>
+                        <option value="all">All Time</option>
                     </select>
                 </div>
             </div>
@@ -376,14 +388,24 @@ export function AllTransactions() {
                                         </td>
 
                                         <td className="px-6 py-2 text-right">
-                                            <button
-                                                type="button"
-                                                onClick={() => handleEditTransactionClick(row.originalId)}
-                                                className="p-2 text-text-muted hover:text-primary hover:bg-surface-elevated rounded transition-colors"
-                                                title="Edit transaction"
-                                            >
-                                                <Pencil className="h-4 w-4" />
-                                            </button>
+                                            <div className="flex items-center justify-end gap-1">
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleEditTransactionClick(row.originalId)}
+                                                    className="p-2 text-text-muted hover:text-primary hover:bg-surface-elevated rounded transition-colors"
+                                                    title="Edit transaction"
+                                                >
+                                                    <Pencil className="h-4 w-4" />
+                                                </button>
+                                                <button
+                                                    type="button"
+                                                    onClick={() => handleDeleteTransaction(row.originalId)}
+                                                    className="p-2 text-text-muted hover:text-danger hover:bg-surface-elevated rounded transition-colors"
+                                                    title="Delete transaction"
+                                                >
+                                                    <Trash2 className="h-4 w-4" />
+                                                </button>
+                                            </div>
                                         </td>
                                     </tr>
                                 );
