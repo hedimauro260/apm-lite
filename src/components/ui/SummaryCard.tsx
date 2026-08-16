@@ -1,7 +1,6 @@
 import { ReactNode, useId } from "react";
 import { Area, AreaChart, ResponsiveContainer, XAxis } from "recharts";
 import { cn, formatCurrency } from "../../lib/utils";
-import { ArrowUpRight } from "lucide-react";
 
 export interface SummaryChartPoint {
     label: string;
@@ -11,7 +10,8 @@ export interface SummaryChartPoint {
 export interface SummaryCardProps {
     title: string;
     value: number;
-    variation?: number;
+    secondaryText?: string;
+    secondaryValue?: number;
     icon: ReactNode;
     trend?: "up" | "down" | "neutral";
     className?: string;
@@ -29,7 +29,8 @@ const TREND_COLORS: Record<NonNullable<SummaryCardProps["trend"]>, string> = {
 export function SummaryCard({
     title,
     value,
-    variation,
+    secondaryText,
+    secondaryValue,
     icon,
     trend = "neutral",
     className,
@@ -47,26 +48,28 @@ export function SummaryCard({
         <div className={cn("card h-full p-4 flex flex-col justify-between",
             className
         )}>
-            <div className="flex items-start justify-between mb-0">
+            <div className="flex items-start justify-between mb-1">
                 <div>
-                    <p className="text-xs font-medium text-text-muted">{title}</p>
+                    <p className="text-[10px] font-medium text-text-secondary uppercase tracking-wider">{title}</p>
                     <h3 className="mt-2 text-xl font-bold text-text-primary">{displayValue}</h3>
                 </div>
-                <div className={cn("p-2 rounded-md",
-                    trend === "up"
-                        ? "bg-success/10 text-success"
-                        : trend === "down"
-                            ? "bg-danger/10 text-danger"
-                            : "bg-surface-elevated text-text-secondary",
-                )}>
+                <div
+                    className="p-2 rounded-md"
+                    style={{ backgroundColor: `${accentColor}1A`, color: accentColor }}
+                >
                     {icon}
                 </div>
             </div>
-            <div className="mb-2 flex items-end gap-1 text-xs font-medium">
-                <ArrowUpRight className="h-3.5 w-3.5 text-success" />
-                <span className="text-success">{variation}%</span>
-                <span className="text-[10px] text-text-muted">vs yesterday</span>
-            </div>
+            {secondaryValue !== undefined ? (
+                <div className="mb-2 text-xs font-medium">
+                    <span style={{ color: accentColor }}>{formatCurrency(secondaryValue)}</span>
+                    {secondaryText && <span className="text-text-muted"> {secondaryText}</span>}
+                </div>
+            ) : secondaryText ? (
+                <div className="mb-2 text-xs font-medium text-text-muted">
+                    {secondaryText}
+                </div>
+            ) : null}
             {/* Area Chart */}
             <div className="h-16 mt-auto pt-2 border-t border-border/50">
                 {data && data.length > 0 && (

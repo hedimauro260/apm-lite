@@ -142,13 +142,13 @@ export function WalletCardExtended({
 
             {/* Valor Total */}
             <div>
-                <p className="text-base font-bold text-text-primary tracking-tight">
+                <p className="text-lg font-bold text-text-primary tracking-tight">
                     {formatCurrency(wallet.balance)}
                 </p>
             </div>
 
             <div className="flex items-end justify-between gap-2">
-                <div className="flex flex-col gap-2">
+                <div className="w-23 flex flex-col gap-2">
                     <p className="text-xs text-text-muted">{assetsCount} Assets</p>
                     <div className="shrink-0">
                         <p className="text-sm font-semibold text-text-primary">

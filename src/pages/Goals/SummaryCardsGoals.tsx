@@ -7,7 +7,7 @@ import {
   Wallet as WalletIcon,
 } from "lucide-react";
 import { cn, formatCurrency } from "../../lib/utils";
-import type { GoalProgress } from "./goalLogic";
+import { getStatusClasses, type GoalProgress } from "./goalLogic";
 
 interface GoalSummaryCardProps {
   title: string;
@@ -20,17 +20,16 @@ interface GoalSummaryCardProps {
 function GoalSummaryCard({ title, value, sub, icon, accent }: GoalSummaryCardProps) {
   return (
     <div className="card h-full p-4 flex flex-col justify-between">
-      <div className="flex items-start justify-between mb-0">
+      <div className="flex items-start justify-between">
         <div className="min-w-0">
           <p className="text-xs font-medium text-text-muted">{title}</p>
           <div className="mt-2 text-xl font-bold text-text-primary truncate">
             {value}
           </div>
-          {sub && <p className="mt-1 text-xs text-text-secondary">{sub}</p>}
         </div>
         <div className={cn("p-2 rounded-md shrink-0", accent)}>{icon}</div>
       </div>
-      <div className="mt-auto pt-2 border-t border-border/50"></div>
+      {sub && <div className="mt-3 text-xs">{sub}</div>}
     </div>
   );
 }
@@ -47,6 +46,7 @@ export function SummaryCardsGoals({ progress }: SummaryCardsGoalsProps) {
   const remaining = progress?.remaining ?? 0;
   const excess = progress?.excess ?? 0;
   const percentage = progress?.percentage ?? 0;
+  const status = progress?.status ?? "Not Started";
   const streak = progress?.streak ?? 0;
   const bestWallet = progress?.bestWallet ?? null;
 
@@ -56,6 +56,7 @@ export function SummaryCardsGoals({ progress }: SummaryCardsGoalsProps) {
         <GoalSummaryCard
           title="Weekly Goal"
           value={formatCurrency(weeklyGoal)}
+          sub={<span className="text-text-muted">Weekly target</span>}
           icon={<Target className="h-4 w-4" />}
           accent="bg-primary/10 text-primary"
         />
@@ -69,7 +70,27 @@ export function SummaryCardsGoals({ progress }: SummaryCardsGoalsProps) {
               </span>
             </span>
           }
-          sub={`${percentage.toFixed(1)}% of weekly goal`}
+          sub={
+            hasActive ? (
+              <span className="flex flex-row items-center gap-2 sm:flex-col sm:items-start sm:gap-1">
+                <span
+                  className={cn(
+                    "rounded-full px-2 py-0.5 text-[10px] font-semibold",
+                    getStatusClasses(status),
+                  )}
+                >
+                  {status}
+                </span>
+                <span className="text-text-secondary">
+                  {percentage.toFixed(1)}% of weekly goal
+                </span>
+              </span>
+            ) : (
+              <span className="text-text-secondary">
+                {percentage.toFixed(1)}% of weekly goal
+              </span>
+            )
+          }
           icon={<TrendingUp className="h-4 w-4" />}
           accent="bg-success/10 text-success"
         />
@@ -77,9 +98,13 @@ export function SummaryCardsGoals({ progress }: SummaryCardsGoalsProps) {
           title="Remaining"
           value={formatCurrency(remaining)}
           sub={
-            hasActive && excess > 0
-              ? `+${formatCurrency(excess)} above goal`
-              : undefined
+            hasActive && excess > 0 ? (
+              <span className="text-success">
+                +{formatCurrency(excess)} above goal
+              </span>
+            ) : hasActive ? (
+              <span className="text-warning">left to reach weekly goal</span>
+            ) : undefined
           }
           icon={<Clock className="h-4 w-4" />}
           accent="bg-warning/10 text-warning"
@@ -90,9 +115,25 @@ export function SummaryCardsGoals({ progress }: SummaryCardsGoalsProps) {
             hasActive && bestWallet ? bestWallet.walletName : "No deposits yet"
           }
           sub={
-            hasActive && bestWallet
-              ? `${bestWallet.percentage.toFixed(1)}% · ${formatCurrency(bestWallet.progress)}`
-              : undefined
+            hasActive && bestWallet ? (
+              <span className="flex items-baseline gap-1">
+                <span
+                  className={
+                    bestWallet.percentage >= 100
+                      ? "text-success"
+                      : bestWallet.percentage >= 60
+                        ? "text-primary"
+                        : "text-warning"
+                  }
+                >
+                  {bestWallet.percentage.toFixed(1)}%{" "}
+                  {formatCurrency(bestWallet.progress)}
+                </span>
+                <span className="text-text-muted">
+                  / {formatCurrency(bestWallet.goal)}
+                </span>
+              </span>
+            ) : undefined
           }
           icon={<WalletIcon className="h-4 w-4" />}
           accent="bg-surface-elevated text-text-secondary"

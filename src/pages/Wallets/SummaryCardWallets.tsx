@@ -1,13 +1,13 @@
 import { type ReactNode } from "react";
-import { cn, formatCurrency, formatPercentage } from "../../lib/utils";
-import { ArrowUpRight, ArrowDownRight, Minus } from "lucide-react";
+import { cn, formatCurrency } from "../../lib/utils";
 
 export interface SummaryCardWalletsProps {
     title: string | ReactNode;
     value: number;
-    variation?: number;
+    secondaryText?: string;
+    secondaryValue?: number;
     icon: ReactNode;
-    trend?: "up" | "down" | "neutral";
+    color?: string;
     className?: string;
     isCurrency?: boolean;
 }
@@ -15,35 +15,25 @@ export interface SummaryCardWalletsProps {
 export function SummaryCardWallets({
     title,
     value,
-    variation,
+    secondaryText,
+    secondaryValue,
     icon,
-    trend = "neutral",
+    color = "#7C5CFC",
     className,
     isCurrency = true,
 }: SummaryCardWalletsProps) {
-    const trendColor =
-        trend === "up"
-            ? "text-success"
-            : trend === "down"
-                ? "text-danger"
-                : "text-text-muted";
-
-    const TrendIcon =
-        trend === "up" ? ArrowUpRight : trend === "down" ? ArrowDownRight : Minus;
     const displayValue = isCurrency
         ? formatCurrency(value)
         : value.toLocaleString();
-    const displayVariation =
-        variation !== undefined ? formatPercentage(variation) : undefined;
 
     return (
         <div
             className={cn("card p-4 flex flex-col justify-between h-full", className)}
         >
             <div>
-                <div className="flex items-start justify-between mb-4">
+                <div className="flex items-start justify-between mb-2">
                     <div>
-                        <p className="text-[10px] font-semibold text-text-muted uppercase tracking-wider mb-1">
+                        <p className="text-[10px] font-semibold text-text-secondary uppercase tracking-wider mb-2">
                             {title}
                         </p>
                         <h3 className="text-base font-bold text-text-primary tracking-tight">
@@ -51,33 +41,27 @@ export function SummaryCardWallets({
                         </h3>
                     </div>
                     <div
-                        className={cn(
-                            "p-2 rounded",
-                            trend === "up"
-                                ? "bg-success/10 text-success"
-                                : trend === "down"
-                                    ? "bg-danger/10 text-danger"
-                                    : "bg-surface-elevated text-text-secondary",
-                        )}
+                        className="p-2 rounded"
+                        style={{ backgroundColor: `${color}1A`, color }}
                     >
                         {icon}
                     </div>
                 </div>
 
-                {displayVariation && (
-                    <div
-                        className={cn(
-                            "flex items-center gap-1 text-xs font-medium mb-0",
-                            trendColor,
+                {secondaryValue !== undefined ? (
+                    <div className="flex items-center gap-1 text-xs font-medium mb-0">
+                        <span style={{ color }}>{formatCurrency(secondaryValue)}</span>
+                        {secondaryText && (
+                            <span className="text-[10px] text-text-muted">
+                                {secondaryText}
+                            </span>
                         )}
-                    >
-                        <TrendIcon className="h-3.5 w-3.5" />
-                        <span>{displayVariation}</span>
-                        <span className="text-[10px] text-text-muted">
-                            vs yesterday
-                        </span>
                     </div>
-                )}
+                ) : secondaryText ? (
+                    <div className="text-xs font-medium text-text-muted mb-0">
+                        {secondaryText}
+                    </div>
+                ) : null}
             </div>
         </div>
     );

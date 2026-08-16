@@ -72,6 +72,18 @@ export function buildDashboardSeries(
   };
 }
 
+export function weeklySums(series: DashboardSeries): {
+  inflows: number;
+  outflows: number;
+  transactions: number;
+} {
+  return {
+    inflows: series.inflows.reduce((sum, point) => sum + point.value, 0),
+    outflows: series.outflows.reduce((sum, point) => sum + point.value, 0),
+    transactions: series.transactions.reduce((sum, point) => sum + point.value, 0),
+  };
+}
+
 export function variationFromSeries(series: { value: number }[]): number {
   if (series.length < 2) return 0;
   const previous = series[series.length - 2].value;

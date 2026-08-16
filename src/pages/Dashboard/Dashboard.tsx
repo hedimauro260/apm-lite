@@ -6,7 +6,7 @@ import { WalletsDashboard } from "./WalletsDashboard";
 import { AssetsDashboard } from "./AssetsDashboard";
 import { LiveCryptoPrices } from './LiveCryptoPrices';
 import { GlobalActivityDashboard } from "./GlobalActivityDashboard";
-import { buildDashboardSeries, trendFromVariation, variationFromSeries } from "./dashboardChartData";
+import { buildDashboardSeries, weeklySums } from "./dashboardChartData";
 import {
     WalletModal,
     type WalletModalData,
@@ -53,6 +53,7 @@ export default function Dashboard() {
     );
 
     const chartData = useMemo(() => buildDashboardSeries(transactions, 7), [transactions]);
+    const weekly = useMemo(() => weeklySums(chartData), [chartData]);
 
     const totalBalance = walletsWithBalance.reduce((sum, wallet) => sum + wallet.balance, 0);
     const totalInflows = transactions
@@ -123,37 +124,35 @@ export default function Dashboard() {
                         <SummaryCard
                             title="Total Balance"
                             value={totalBalance}
-                            variation={variationFromSeries(chartData.balance)}
+                            secondaryText="Current portfolio value"
                             icon={<WalletIcon className="h-4 w-4" />}
-                            trend={trendFromVariation(variationFromSeries(chartData.balance))}
                             data={chartData.balance}
                             color="#7C5CFC"
                         />
                         <SummaryCard
-                            title="Total Inflowse"
+                            title="Total Inflows"
                             value={totalInflows}
-                            variation={variationFromSeries(chartData.inflows)}
+                            secondaryValue={weekly.inflows}
+                            secondaryText="This week"
                             icon={<ArrowUpRight className="h-4 w-4" />}
-                            trend={trendFromVariation(variationFromSeries(chartData.inflows))}
                             data={chartData.inflows}
                             color="#22C55E"
                         />
                         <SummaryCard
                             title="Total Outflows"
                             value={totalOutflows}
-                            variation={variationFromSeries(chartData.outflows)}
+                            secondaryValue={weekly.outflows}
+                            secondaryText="This week"
                             icon={<ArrowDownRight className="h-4 w-4" />}
-                            trend={trendFromVariation(variationFromSeries(chartData.outflows))}
                             data={chartData.outflows}
                             color="#EF4444"
                         />
                         <SummaryCard
                             title="Total Transactions"
                             value={totalTransactions}
-                            variation={variationFromSeries(chartData.transactions)}
+                            secondaryText={`${weekly.transactions} this week`}
                             icon={<Activity className="h-4 w-4" />}
                             isCurrency={false}
-                            trend={trendFromVariation(variationFromSeries(chartData.transactions))}
                             data={chartData.transactions}
                             color="#38BDF8"
                         />

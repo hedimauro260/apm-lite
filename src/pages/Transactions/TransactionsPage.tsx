@@ -13,13 +13,14 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { db } from "../../database/db";
 import { generateId, withWalletBalances } from "../../lib/utils";
 import type { Transaction, TransactionType } from "../../types";
-import { buildDashboardSeries, trendFromVariation, variationFromSeries } from "../Dashboard/dashboardChartData";
+import { buildDashboardSeries, weeklySums } from "../Dashboard/dashboardChartData";
 
 export default function Transactions() {
     const transactions = useLiveQuery(() => db.transactions.toArray(), [], []);
     const wallets = useLiveQuery(() => db.wallets.toArray(), [], []);
 
     const chartData = useMemo(() => buildDashboardSeries(transactions, 7), [transactions]);
+    const weekly = useMemo(() => weeklySums(chartData), [chartData]);
 
     const totalBalance = withWalletBalances(wallets, transactions).reduce(
         (sum, wallet) => sum + wallet.balance,
@@ -103,37 +104,35 @@ export default function Transactions() {
                     <SummaryCard
                         title="Total Balance"
                         value={totalBalance}
-                        variation={variationFromSeries(chartData.balance)}
+                        secondaryText="Current portfolio value"
                         icon={<Wallet className="h-4 w-4" />}
-                        trend={trendFromVariation(variationFromSeries(chartData.balance))}
                         data={chartData.balance}
                         color="#7C5CFC"
                     />
                     <SummaryCard
                         title="Total Inflowse"
                         value={totalInflows}
-                        variation={variationFromSeries(chartData.inflows)}
+                        secondaryValue={weekly.inflows}
+                        secondaryText="This week"
                         icon={<ArrowUpRight className="h-4 w-4" />}
-                        trend={trendFromVariation(variationFromSeries(chartData.inflows))}
                         data={chartData.inflows}
                         color="#22C55E"
                     />
                     <SummaryCard
                         title="Total Outflows"
                         value={totalOutflows}
-                        variation={variationFromSeries(chartData.outflows)}
+                        secondaryValue={weekly.outflows}
+                        secondaryText="This week"
                         icon={<ArrowDownRight className="h-4 w-4" />}
-                        trend={trendFromVariation(variationFromSeries(chartData.outflows))}
                         data={chartData.outflows}
                         color="#EF4444"
                     />
                     <SummaryCard
                         title="Total Transactions"
                         value={totalTransactions}
-                        variation={variationFromSeries(chartData.transactions)}
+                        secondaryText={`${weekly.transactions} this week`}
                         icon={<Activity className="h-4 w-4" />}
                         isCurrency={false}
-                        trend={trendFromVariation(variationFromSeries(chartData.transactions))}
                         data={chartData.transactions}
                         color="#38BDF8"
                     />

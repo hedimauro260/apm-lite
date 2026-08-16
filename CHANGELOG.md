@@ -5,6 +5,21 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/).
 
+## [0.13.4] - 2026-08-16
+
+### 📝 Melhorias de UI/UX
+
+- Ajuste no UI de todos os summary cards de todas as paginas
+- Pequeno ajuste no UI do card das wallets
+
+### 🐛 Correções de Bugs
+
+- Correção do overflow dos menus de contexto nas tabelas
+
+### Pequenas melhorias
+
+- Aumentado o numero de itens por página na pagina goals
+
 ## [0.13.2] - 2026-08-14
 
 ### 🐛 Correções de Bugs

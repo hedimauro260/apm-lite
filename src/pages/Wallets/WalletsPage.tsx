@@ -27,14 +27,14 @@ import {
     type LucideIcon,
 } from "lucide-react"
 import type { Transaction, TransactionType, Wallet } from "../../types"
-
-type Trend = "up" | "down" | "neutral"
+import { buildDashboardSeries, weeklySums } from "../Dashboard/dashboardChartData"
 
 interface WalletSummary {
     label: string
     value: number
-    variation?: number
-    trend?: Trend
+    secondaryText?: string
+    secondaryValue?: number
+    color: string
     isCurrency?: boolean
     icon: LucideIcon
 }
@@ -64,6 +64,11 @@ export default function Wallets() {
         () => withWalletBalances(wallets, transactions),
         [wallets, transactions],
     )
+    const chartData = useMemo(
+        () => buildDashboardSeries(transactions, 7),
+        [transactions],
+    )
+    const weekly = useMemo(() => weeklySums(chartData), [chartData])
     const totalWallets = walletsWithBalance.length
     const totalBalance = walletsWithBalance.reduce(
         (total, wallet) => total + wallet.balance,
@@ -197,37 +202,41 @@ export default function Wallets() {
         {
             label: "Total Wallets",
             value: totalWallets,
+            secondaryText: "Active wallets",
             isCurrency: false,
             icon: WalletIcon,
+            color: "#7C5CFC",
         },
         {
             label: "Total Balance",
             value: totalBalance,
-            variation: 12.5,
-            trend: "up",
+            secondaryText: "Current portfolio value",
             icon: DollarSign,
+            color: "#38BDF8",
         },
         {
             label: "Total Inflows",
             value: totalInflows,
-            variation: 8.2,
-            trend: "up",
+            secondaryValue: weekly.inflows,
+            secondaryText: "This week",
             icon: ArrowUpRight,
+            color: "#22C55E",
         },
         {
             label: "Total Outflows",
             value: totalOutflows,
-            variation: 3.4,
-            trend: "up",
+            secondaryValue: weekly.outflows,
+            secondaryText: "This week",
             icon: ArrowDownRight,
+            color: "#EF4444",
         },
         {
             label: "Total Transações",
             value: totalTransactions,
-            variation: 3.2,
-            trend: "down",
+            secondaryText: `${weekly.transactions} this week`,
             isCurrency: false,
             icon: Activity,
+            color: "#F59E0B",
         },
     ]
 

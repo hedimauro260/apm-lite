@@ -5,7 +5,7 @@ import { Pagination } from "../../components/ui/Pagination";
 import type { Transaction, Wallet } from "../../types";
 import { walletDisplayName } from "./goalLogic";
 
-const PAGE_SIZE = 10;
+const PAGE_SIZE = 20;
 
 export interface RecentGoalActivityProps {
   transactions: Transaction[];
