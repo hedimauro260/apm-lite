@@ -19,9 +19,19 @@ import {
 } from "lucide-react";
 import {
     buildDailyGainsChart,
+    startOfDayLocal,
     type SiteSummary,
 } from "./sitesLogic";
 import type { SiteMovement } from "../../types";
+
+const PERIOD_DATE_FORMATTER = new Intl.DateTimeFormat("en-US", {
+    month: "short",
+    day: "2-digit",
+});
+
+function formatMMMDD(date: Date): string {
+    return PERIOD_DATE_FORMATTER.format(date);
+}
 
 function ChartTooltip({
     active,
@@ -58,6 +68,7 @@ interface SummaryRow {
     value: number;
     icon: LucideIcon;
     color: string;
+    period: string;
 }
 
 export interface EarningsChartSectionProps {
@@ -71,30 +82,48 @@ export function EarningsChartSection({
 }: EarningsChartSectionProps) {
     const chartData = useMemo(() => buildDailyGainsChart(movements, 30), [movements]);
 
+    const today = new Date();
+    const yesterday = new Date(today);
+    yesterday.setDate(today.getDate() - 1);
+
+    const last7Start = startOfDayLocal(today);
+    last7Start.setDate(last7Start.getDate() - 6);
+    const last30Start = startOfDayLocal(today);
+    last30Start.setDate(last30Start.getDate() - 29);
+
+    const todayLabel = formatMMMDD(today);
+    const yesterdayLabel = formatMMMDD(yesterday);
+    const last7Label = `${formatMMMDD(last7Start)} - ${formatMMMDD(today)}`;
+    const last30Label = `${formatMMMDD(last30Start)} - ${formatMMMDD(today)}`;
+
     const summaryRows: SummaryRow[] = [
         {
             label: "Earning Today",
             value: summary.today,
             icon: TrendingUp,
             color: "bg-success/10 text-success",
+            period: todayLabel,
         },
         {
             label: "Earning Yesterday",
             value: summary.yesterday,
             icon: CalendarClock,
             color: "bg-info/10 text-info",
+            period: yesterdayLabel,
         },
         {
             label: "Last 7 days",
             value: summary.last7d,
             icon: CalendarDays,
             color: "bg-primary/10 text-primary",
+            period: last7Label,
         },
         {
             label: "Last 30 days",
             value: summary.last30d,
             icon: CalendarRange,
             color: "bg-warning/10 text-warning",
+            period: last30Label,
         },
     ];
 
@@ -203,19 +232,24 @@ export function EarningsChartSection({
                             return (
                                 <div
                                     key={row.label}
-                                    className="flex items-center gap-3 rounded-lg border border-border bg-surface-elevated/40 px-4 py-3"
+                                    className="flex flex-col rounded-lg border border-border bg-surface-elevated/40 px-4 py-3"
                                 >
-                                    <div className={cn("p-2 rounded shrink-0", row.color)}>
-                                        <Icon className="h-4 w-4" />
+                                    <div className="flex items-center gap-3">
+                                        <div className={cn("p-2 rounded shrink-0", row.color)}>
+                                            <Icon className="h-4 w-4" />
+                                        </div>
+                                        <div className="min-w-0 flex-1">
+                                            <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider">
+                                                {row.label}
+                                            </p>
+                                            <p className="text-sm font-bold text-text-primary tracking-tight">
+                                                {formatCurrency(row.value)}
+                                            </p>
+                                        </div>
                                     </div>
-                                    <div className="min-w-0 flex-1">
-                                        <p className="text-[10px] font-medium text-text-muted uppercase tracking-wider">
-                                            {row.label}
-                                        </p>
-                                        <p className="text-sm font-bold text-text-primary tracking-tight">
-                                            {formatCurrency(row.value)}
-                                        </p>
-                                    </div>
+                                    <p className="mt-1.5 text-[10px] leading-none text-text-muted">
+                                        {row.period}
+                                    </p>
                                 </div>
                             );
                         })}

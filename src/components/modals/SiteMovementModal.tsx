@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
     ArrowDownToLine,
     ArrowUpFromLine,
@@ -9,10 +9,11 @@ import {
     Save,
     Wallet as WalletIcon,
 } from "lucide-react";
+import { evaluate } from "mathjs";
 import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
-import { cn } from "../../lib/utils";
+import { cn, formatCurrency } from "../../lib/utils";
 import type { Site, SiteMovement, SiteMovementType, Wallet } from "../../types";
 
 export interface SiteMovementModalData {
@@ -50,6 +51,20 @@ function toTimeInputValue(date: Date): string {
     return `${hours}:${minutes}`;
 }
 
+function tryEvaluateExpression(expr: string): number | null {
+    const trimmed = expr.trim();
+    if (!trimmed) return null;
+    if (!/[+\-*/()%]/.test(trimmed)) return null;
+    if (/[^0-9+\-*/().\s%]/.test(trimmed)) return null;
+    try {
+        const result = evaluate(trimmed);
+        if (typeof result !== "number" || !isFinite(result)) return null;
+        return Number(result.toFixed(2));
+    } catch {
+        return null;
+    }
+}
+
 export function SiteMovementModal({
     open,
     mode = "create",
@@ -72,6 +87,41 @@ export function SiteMovementModal({
     const [time, setTime] = useState("");
     const [description, setDescription] = useState("");
     const [errors, setErrors] = useState<Record<string, string>>({});
+
+    const selectedSite = useMemo(
+        () => sites.find((s) => s.id === siteId) ?? null,
+        [sites, siteId]
+    );
+    const currentBalance = selectedSite?.balance ?? 0;
+
+    const handleEvaluateAmount = () => {
+        const result = tryEvaluateExpression(amount);
+        if (result !== null && isFinite(result)) {
+            setAmount(String(result));
+            setErrors((p) => {
+                const { amount: _a, ...rest } = p;
+                void _a;
+                return rest;
+            });
+            return true;
+        }
+        if (/[+\-*/()%]/.test(amount)) {
+            setErrors((p) => ({ ...p, amount: "Invalid expression" }));
+        }
+        return false;
+    };
+
+    const handleAmountKeyDown = (e: React.KeyboardEvent<HTMLInputElement>) => {
+        if (e.key === "Enter" || e.key === "=") {
+            const hasOperator = /[+\-*/()%]/.test(amount);
+            if (hasOperator) {
+                e.preventDefault();
+                handleEvaluateAmount();
+            } else if (e.key === "=") {
+                e.preventDefault();
+            }
+        }
+    };
 
     useEffect(() => {
         if (!open) return;
@@ -105,9 +155,17 @@ export function SiteMovementModal({
     const handleSubmit = () => {
         const nextErrors: Record<string, string> = {};
         if (!siteId) nextErrors.siteId = "Select a site";
-        const parsedAmount = parseFloat(amount);
-        if (!amount || isNaN(parsedAmount) || parsedAmount <= 0) {
-            nextErrors.amount = "Enter a valid amount greater than zero";
+        let amountToParse = amount.trim();
+        const evaluated = tryEvaluateExpression(amountToParse);
+        if (evaluated !== null) {
+            amountToParse = String(evaluated);
+            if (amount !== amountToParse) setAmount(amountToParse);
+        } else if (/[+\-*/()%]/.test(amountToParse)) {
+            nextErrors.amount = "Invalid expression";
+        }
+        const parsedAmount = parseFloat(amountToParse);
+        if (!amountToParse || isNaN(parsedAmount) || parsedAmount <= 0 || !isFinite(parsedAmount)) {
+            if (!nextErrors.amount) nextErrors.amount = "Enter a valid amount greater than zero";
         }
         if (!date) nextErrors.date = "Select a date";
         if (type === "withdraw" && walletId && !wallets.some((w) => w.id === walletId)) {
@@ -296,24 +354,35 @@ export function SiteMovementModal({
                     <label className="block text-sm font-medium text-text-secondary">
                         Amount <span className="text-text-muted">(USD)</span>
                     </label>
-                    <Input
-                        className="mt-1.5"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        inputMode="decimal"
-                        placeholder="0.00"
-                        value={amount}
-                        onChange={(e) => {
-                            setAmount(e.target.value);
-                            setErrors((p) => {
-                                const { amount: _a, ...rest } = p;
-                                void _a;
-                                return rest;
-                            });
-                        }}
-                        error={errors.amount}
-                    />
+                    <div className="mt-1.5 flex flex-col gap-2 sm:flex-row sm:items-start">
+                        <div className="flex-1 min-w-0">
+                            <Input
+                                type="text"
+                                inputMode="decimal"
+                                placeholder="0.00 or e.g. 100 + 50"
+                                value={amount}
+                                onChange={(e) => {
+                                    setAmount(e.target.value);
+                                    setErrors((p) => {
+                                        const { amount: _a, ...rest } = p;
+                                        void _a;
+                                        return rest;
+                                    });
+                                }}
+                                onKeyDown={handleAmountKeyDown}
+                                error={errors.amount}
+                            />
+                            <p className="mt-1 text-xs text-text-muted">
+                                Tip: type an expression like <span className="font-mono">100 + 50</span> and press <span className="font-mono">Enter</span> or <span className="font-mono">=</span> to calculate
+                            </p>
+                        </div>
+                        <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-surface-elevated/40 px-3 py-2 sm:h-10 sm:shrink-0 sm:justify-start">
+                            <span className="text-xs text-text-muted whitespace-nowrap">Current Balance:</span>
+                            <span className="text-sm font-semibold text-text-primary whitespace-nowrap">
+                                {formatCurrency(currentBalance)}
+                            </span>
+                        </div>
+                    </div>
                 </div>
 
                 {type === "withdraw" && (

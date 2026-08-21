@@ -5,6 +5,54 @@ Todas as mudanças notáveis neste projeto serão documentadas neste arquivo.
 O formato é baseado em [Keep a Changelog](https://keepachangelog.com/),
 e este projeto adere ao [Semantic Versioning](https://semver.org/).
 
+## [0.14.3] - 2026-08-21
+
+### Added
+
+- **TRANSACTIONS — Saldo da Carteira no Add Transaction Modal** (`modal-002`):
+  - Exibição do **Current Balance** da carteira selecionada ao lado do campo **Amount** replicando layout `SiteMovementModal` (`flex flex-col gap-2 sm:flex-row sm:items-start`) — `TRANSACTION-001..005`
+  - Saldo derivado via `wallets.find(w=>w.id===walletId)?.balance` usando camada existente (sem novo cálculo) e atualizado reativamente ao trocar carteira — `TRANSACTION-002`/`TRANSACTION-006`
+  - Em `transfer` exibe ambos saldos `Current Balance (From)` e `Current Balance (To)` empilhados no mesmo container à direita do Amount
+  - Layout responsivo: mesma linha em desktop/tablet (`sm:h-10 sm:shrink-0`), empilhado em mobile, sem alterar lógica de criação (`validate`/`handleSubmit` intactos) — `TRANSACTION-007`
+
+## [0.14.2] - 2026-08-21
+
+### Added
+
+- **WEBSITES — Summary Card Periods** (`websites-001`):
+  - Adicionada data/período abaixo do container ícone+label+value nos 4 cards do `EarningsChartSection` (seção 3. Chart + Summary) — `WEBSITE-001..005`
+  - `Earning Today` → `MMM DD` do dia, `Earning Yesterday` → ontem, `Last 7 days` → `${MMM DD} - ${MMM DD}` últimos 7 dias (hoje-6), `Last 30 days` → últimos 30 dias (hoje-29) — `WEBSITE-006`/`WEBSITE-007`
+  - Formatação via `Intl.DateTimeFormat` `month:"short" day:"2-digit"` consistente com `DAY_LABEL_FORMATTER`, mantendo `2-digit` — `WEBSITE-006`
+  - Cálculo consistente com `startOfDayLocal`/`isWithinDays` e layout responsivo preservado (`flex flex-col`, `text-[10px]`) — `WEBSITE-007`/`WEBSITE-008`
+
+## [0.14.1] - 2026-08-21
+
+### Added
+
+- **ASSETS — Live Crypto Prices** (`assets-001`):
+  - Movido `LiveCryptoPrices.tsx` de `src/pages/Dashboard` para `src/components/modules` — `ASSET-001`/`ASSET-004`
+  - Ajustados imports relativos e corrigidos imports em `Dashboard.tsx` e `Dashboard/index.ts` — `ASSET-002`/`ASSET-003`
+  - Importado e renderizado `LiveCryptoPrices` na `AssetsPage` entre **All Asset Table/Grid** (seção 3) e **All Activity** (seção 4) — `ASSET-005`/`ASSET-006`/`ASSET-007`
+  - Mantido `LiveCryptoPrices` também na `Dashboard` (import atualizado) — preservado comportamento
+  - Criado barrel `src/components/modules/index.ts` para re-export
+  - Verificado `tsc -b && vite build` sem erros e sem referências ao caminho antigo — `ASSET-008`/`ASSET-009`
+
+## [0.14.0] - 2026-08-21
+
+### Added
+
+- **Websites — Movimento e Calculadora de Saldo** (`SiteMovementModal`):
+  - Exibição do **Current Balance** do Website selecionado ao lado do campo **Amount** (mesma linha em desktop/tablet, empilhado em mobile) — `SITE-001`/`SITE-002`/`SITE-003`
+  - Saldo atualizado reativamente ao trocar o Website no select
+  - Suporte a expressões matemáticas no campo **Amount** via `mathjs` — `SITE-005`
+  - Avaliação da expressão ao pressionar `Enter` (`SITE-006`) e `=` (`SITE-007`) com substituição do resultado no input (`SITE-008`)
+  - Tratamento seguro de expressões inválidas sem quebrar o modal (`SITE-009`)
+  - Garantia de valor numérico válido (>0, finito) no submit, com avaliação automática mesmo sem pressionar Enter/= (`SITE-010`)
+
+### Dependências
+
+- Adicionada `mathjs` para cálculo de expressões no `SiteMovementModal`
+
 ## [0.13.4] - 2026-08-16
 
 ### 📝 Melhorias de UI/UX

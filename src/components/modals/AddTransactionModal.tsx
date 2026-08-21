@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import {
     AlertCircle,
     ArrowDownRight,
@@ -14,7 +14,7 @@ import { Modal } from "../ui/Modal";
 import { Button } from "../ui/Button";
 import { Input } from "../ui/Input";
 import { Switch } from "../ui/Switch";
-import { cn } from "../../lib/utils";
+import { cn, formatCurrency } from "../../lib/utils";
 import type { TransactionStatus, TransactionType, Wallet } from "../../types";
 
 export type AdjustDirection = "add" | "remove";
@@ -152,6 +152,18 @@ export function AddTransactionModal({
 
     const selectableWallets = wallets.filter((w) => w.status === "active");
     const walletList = selectableWallets.length > 0 ? selectableWallets : wallets;
+
+    const selectedWallet = useMemo(
+        () => wallets.find((w) => w.id === walletId) ?? null,
+        [wallets, walletId]
+    );
+    const currentBalance = selectedWallet?.balance ?? 0;
+
+    const selectedToWallet = useMemo(
+        () => wallets.find((w) => w.id === toWalletId) ?? null,
+        [wallets, toWalletId]
+    );
+    const toWalletBalance = selectedToWallet?.balance ?? 0;
 
     const handleTypeChange = (nextType: TransactionType) => {
         setType(nextType);
@@ -389,24 +401,71 @@ export function AddTransactionModal({
                     <label className="block text-sm font-medium text-text-secondary">
                         Amount <span className="text-text-muted">(USD)</span>
                     </label>
-                    <Input
-                        className="mt-1.5"
-                        type="number"
-                        min="0"
-                        step="0.01"
-                        inputMode="decimal"
-                        placeholder="0.00"
-                        value={amount}
-                        onChange={(e) => {
-                            setAmount(e.target.value);
-                            setErrors((prev) => {
-                                const { amount: _a, ...rest } = prev;
-                                void _a;
-                                return rest;
-                            });
-                        }}
-                        error={errors.amount}
-                    />
+                    {isTransfer ? (
+                        <>
+                            <div className="mt-1.5 grid grid-cols-1 sm:grid-cols-2 gap-2">
+                                <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-surface-elevated/40 px-3 py-2 sm:h-10">
+                                    <span className="text-xs text-text-muted whitespace-nowrap">Current Balance (From):</span>
+                                    <span className="text-sm font-semibold text-text-primary whitespace-nowrap">
+                                        {formatCurrency(currentBalance)}
+                                    </span>
+                                </div>
+                                <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-surface-elevated/40 px-3 py-2 sm:h-10">
+                                    <span className="text-xs text-text-muted whitespace-nowrap">Current Balance (To):</span>
+                                    <span className="text-sm font-semibold text-text-primary whitespace-nowrap">
+                                        {formatCurrency(toWalletBalance)}
+                                    </span>
+                                </div>
+                            </div>
+                            <div className="mt-2">
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    inputMode="decimal"
+                                    placeholder="0.00"
+                                    value={amount}
+                                    onChange={(e) => {
+                                        setAmount(e.target.value);
+                                        setErrors((prev) => {
+                                            const { amount: _a, ...rest } = prev;
+                                            void _a;
+                                            return rest;
+                                        });
+                                    }}
+                                    error={errors.amount}
+                                />
+                            </div>
+                        </>
+                    ) : (
+                        <div className="mt-1.5 flex flex-col gap-2 sm:flex-row sm:items-start">
+                            <div className="flex-1 min-w-0">
+                                <Input
+                                    type="number"
+                                    min="0"
+                                    step="0.01"
+                                    inputMode="decimal"
+                                    placeholder="0.00"
+                                    value={amount}
+                                    onChange={(e) => {
+                                        setAmount(e.target.value);
+                                        setErrors((prev) => {
+                                            const { amount: _a, ...rest } = prev;
+                                            void _a;
+                                            return rest;
+                                        });
+                                    }}
+                                    error={errors.amount}
+                                />
+                            </div>
+                            <div className="flex items-center justify-between gap-2 rounded-md border border-border bg-surface-elevated/40 px-3 py-2 sm:h-10 sm:shrink-0 sm:justify-start">
+                                <span className="text-xs text-text-muted whitespace-nowrap">Current Balance:</span>
+                                <span className="text-sm font-semibold text-text-primary whitespace-nowrap">
+                                    {formatCurrency(currentBalance)}
+                                </span>
+                            </div>
+                        </div>
+                    )}
                 </div>
 
                 {/* Contabilização para Goals (apenas depósito) */}

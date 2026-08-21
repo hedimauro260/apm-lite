@@ -4,7 +4,7 @@ import { useLiveQuery } from "dexie-react-hooks";
 import { SummaryCard } from "../../components/ui/SummaryCard";
 import { WalletsDashboard } from "./WalletsDashboard";
 import { AssetsDashboard } from "./AssetsDashboard";
-import { LiveCryptoPrices } from './LiveCryptoPrices';
+import { LiveCryptoPrices } from '../../components/modules/LiveCryptoPrices';
 import { GlobalActivityDashboard } from "./GlobalActivityDashboard";
 import { buildDashboardSeries, weeklySums } from "./dashboardChartData";
 import {

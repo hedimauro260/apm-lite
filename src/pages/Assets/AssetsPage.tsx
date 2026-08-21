@@ -48,6 +48,7 @@ import {
   type EditActivityData,
 } from "./EditActivityModal";
 import { DeleteActivityModal } from "./DeleteActivityModal";
+import { LiveCryptoPrices } from "../../components/modules/LiveCryptoPrices";
 
 type ViewMode = "table" | "grid";
 
@@ -772,6 +773,9 @@ export default function Assets() {
           </div>
         )}
       </section>
+
+      {/* Live Crypto Prices */}
+      <LiveCryptoPrices />
 
       {/* 4. All Activity */}
       <AssetsActivity
